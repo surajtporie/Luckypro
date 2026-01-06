@@ -29,12 +29,20 @@
     .tab.active { background: var(--primary); color: white; border: 1px solid #fff; }
 
     .list { margin-top: 10px; max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; background: #181818; }
-    .item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border); }
+    .item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border); transition: background 0.5s; }
+    .merged-highlight { background: #2e7d32 !important; }
+
     .total-section { display: flex; justify-content: space-between; padding: 10px; background: #333; border-radius: 8px; margin-top: 10px; font-weight: bold; border: 1px solid var(--secondary); color: var(--secondary); font-size: 18px; }
     
     .hidden { display: none !important; }
 
-    .toggle-row { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; padding: 5px; background: #2c2c2c; border-radius: 8px; }
+    /* വോയ്‌സ് സെക്ഷൻ സ്റ്റൈൽ - ടോപ്പിൽ */
+    .top-voice-container { background: #263238; padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: center; border: 1px dashed var(--secondary); }
+    .voice-btn { background: var(--danger) !important; color: white; border-radius: 50%; width: 55px; height: 55px; font-size: 26px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; border: none; box-shadow: 0 0 15px rgba(211,47,47,0.4); transition: 0.3s; }
+    .voice-active { background: #ff0000 !important; animation: pulse 1s infinite; transform: scale(1.1); }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0px rgba(211,47,47,0.7); } 100% { box-shadow: 0 0 0 15px rgba(211,47,47,0); } }
+
+    .toggle-row { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; padding: 5px; background: #2c2c2c; border-radius: 8px; }
     .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .4s; border-radius: 20px; }
@@ -43,7 +51,7 @@
     input:checked + .slider:before { transform: translateX(20px); }
 
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
-    .modal-content { background: var(--card-bg); width: 100%; max-width: 400px; padding: 20px; border-radius: 15px; border: 1px solid var(--primary); }
+    .modal-content { background: var(--card-bg); width: 100%; max-width: 400px; padding: 20px; border-radius: 15px; border: 1px solid var(--primary); overflow-y: auto; max-height: 90vh; }
     
     .fixed-keypad { position: fixed; bottom: -350px; left: 0; width: 100%; background: #1a1a1a; padding: 10px; box-sizing: border-box; border-top: 2px solid var(--primary); z-index: 3000; transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     .keypad-show { bottom: 0; }
@@ -54,7 +62,7 @@
     .del-btn { background: none; border: none; color: var(--danger); font-size: 18px; cursor: pointer; padding: 5px 10px; }
 </style>
 </head>
-<body onclick="hideKeypadOnOutside(event)" onload="checkAutoLogin(); loadCustomStyles(); loadSoundPref();">
+<body onclick="hideKeypadOnOutside(event)" onload="checkAutoLogin(); loadCustomStyles(); loadSettings();">
 
 <div id="loginOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#121212; z-index:9999; display:flex; justify-content:center; align-items:center;">
     <div class="card" style="max-width:320px; text-align:center; min-height: auto;">
@@ -67,16 +75,33 @@
 <div id="settingsModal" class="modal-overlay hidden">
     <div class="modal-content">
         <h3 style="color:var(--primary); margin:0;">Settings</h3>
+        <hr style="border:0.5px solid #333;">
+        
         <label>Button Size:</label>
         <input type="range" min="5" max="30" value="12" oninput="changeBtnSize(this.value)">
+
         <div class="toggle-row">
-            <span>Entry Sound </span>
+            <span>Entry Sound 🔊</span>
             <label class="switch">
-                <input type="checkbox" id="soundToggle" checked onchange="saveSoundPref()">
+                <input type="checkbox" id="soundToggle" checked onchange="saveSettings()">
                 <span class="slider"></span>
             </label>
         </div>
-        <button onclick="toggleLayoutMode()" id="layoutModeBtn" style="background:#444;">Enable Move Mode</button>
+
+        <div class="toggle-row">
+            <span>Duplicate Merge 🧬</span>
+            <label class="switch">
+                <input type="checkbox" id="mergeToggle" onchange="saveSettings()">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div style="padding: 5px; background: #2c2c2c; border-radius: 8px; margin-top: 10px;">
+            <label style="font-size: 14px;">Count Limit Alert ⚠️</label>
+            <input id="limitInput" type="number" placeholder="Set Limit (e.g. 100)" style="margin-top:5px;" oninput="saveSettings()">
+        </div>
+
+        <button onclick="toggleLayoutMode()" id="layoutModeBtn" style="background:#444; margin-top:15px;">Enable Move Mode</button>
         <button style="background:var(--secondary);" onclick="saveCustomStyles()">SAVE & CLOSE</button>
         <button style="background:var(--danger);" onclick="resetStyles()">RESET ALL</button>
     </div>
@@ -96,14 +121,19 @@
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <h3 style="margin:0; color:var(--primary);">Lottery Pro</h3>
             <div style="display:flex; gap:5px;">
-                <button onclick="openSettings()" style="width:auto; background:none; font-size:20px; padding:5px;"></button>
+                <button onclick="openSettings()" style="width:auto; background:none; font-size:20px; padding:5px;">⚙️</button>
                 <button id="btn-share" class="custom-btn" onclick="share()" style="width:auto; font-size:11px; background:#25D366; padding:5px 12px;">SHARE</button>
                 <button id="btn-smart" class="custom-btn" onclick="toggleSmart(true)" style="width:auto; font-size:11px; background:var(--secondary); padding:5px 12px;">SMART</button>
             </div>
         </div>
 
+        <div class="top-voice-container">
+            <button class="voice-btn" id="voiceBtn" onclick="startVoice()">🎙️</button>
+            <p id="voiceStatus" style="font-size:11px; color:var(--secondary); margin-top:5px; font-weight:bold;">ശ്രദ്ധിക്കുന്നു... പറയൂ (മലയാളം)</p>
+        </div>
+
         <div class="tabs" id="tabsList"></div>
-        <input id="customer" placeholder=" " oninput="updateTabName()">
+        <input id="customer" placeholder="കസ്റ്റമർ പേര്" oninput="updateTabName()">
         
         <div id="normalEntry">
             <div class="row">
@@ -115,6 +145,7 @@
                 <input id="num" placeholder="No" readonly onclick="setFocus('num', event)" style="flex:2;">
                 <input id="count" placeholder="Count" readonly onclick="setFocus('count', event)" style="flex:2;">
             </div>
+
             <div class="row">
                 <button id="btn-add" class="custom-btn" style="background:var(--primary); flex: 1;" onclick="addEntry()">ADD</button>
                 <button id="btn-box" class="custom-btn" style="background:#f57c00; flex: 1;" onclick="addBoxEntry()">BOX</button>
@@ -156,7 +187,7 @@
         <button style="background:var(--secondary);" onclick="checkWinners()">CHECK WINNINGS</button>
         <div id="winDisplay" class="hidden">
             <div id="winContent" style="background:var(--win-bg); padding:10px; border-radius:8px; margin-top:10px; white-space: pre-wrap; font-family: monospace;"></div>
-            <div class="total-section"><span>TOTAL WIN</span><span id="totalWinAmount">0</span></div>
+            <div class="total-section"><span>TOTAL WIN</span><span id="totalWinAmount">₹0</span></div>
             <div class="row">
                 <button style="background:#25D366; flex:1;" onclick="shareWinningList()">SHARE</button>
                 <button style="background:#0288d1; flex:1;" onclick="copyWinningList()">COPY</button>
@@ -188,10 +219,26 @@
     let lastDeletedData = null;
     let currentInputId = 'num';
     let lastWinDetails = "";
+    let isNewCount = false;
 
     const firebaseConfig = { databaseURL: "https://surajlott-4a0b6-default-rtdb.firebaseio.com/" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+    // --- Settings & UI ---
+    function saveSettings() {
+        localStorage.setItem("sound_enabled", document.getElementById("soundToggle").checked);
+        localStorage.setItem("merge_enabled", document.getElementById("mergeToggle").checked);
+        localStorage.setItem("count_limit", document.getElementById("limitInput").value);
+    }
+    function loadSettings() {
+        const s = localStorage.getItem("sound_enabled");
+        if (s !== null) document.getElementById("soundToggle").checked = (s === 'true');
+        const m = localStorage.getItem("merge_enabled");
+        if (m !== null) document.getElementById("mergeToggle").checked = (m === 'true');
+        const l = localStorage.getItem("count_limit");
+        if (l !== null) document.getElementById("limitInput").value = l;
+    }
 
     function setFocus(id, e) {
         if(e) e.stopPropagation();
@@ -200,6 +247,7 @@
         document.getElementById(id).classList.add('input-focus');
         document.getElementById('customKeypad').classList.add('keypad-show');
         document.body.style.paddingBottom = "280px";
+        if(id === 'count') isNewCount = true;
     }
     function hideKeypad() {
         document.getElementById('customKeypad').classList.remove('keypad-show');
@@ -208,15 +256,11 @@
     }
     function hideKeypadOnOutside(e) {
         const kp = document.getElementById('customKeypad');
-        const isInput = e.target.tagName === 'INPUT';
-        if(!kp.contains(e.target) && !isInput) hideKeypad();
+        if(!kp.contains(e.target) && e.target.tagName !== 'INPUT') hideKeypad();
     }
     function handleEnterKey() {
         if(currentInputId === 'num') setFocus('count');
-        else if(currentInputId === 'count') addEntry();
-        else if(currentInputId === 'stepStart') setFocus('stepEnd');
-        else if(currentInputId === 'stepEnd') setFocus('stepCount');
-        else if(currentInputId === 'stepCount') processStep();
+        else addEntry();
     }
 
     function playEntrySound() {
@@ -231,12 +275,51 @@
             osc.start(); osc.stop(audioCtx.currentTime + 0.1);
         } catch(e) {}
     }
-    function saveSoundPref() { localStorage.setItem("sound_enabled", document.getElementById("soundToggle").checked); }
-    function loadSoundPref() {
-        const s = localStorage.getItem("sound_enabled");
-        if (s !== null) document.getElementById("soundToggle").checked = (s === 'true');
+
+    // --- Voice Recognition Fix ---
+    function startVoice() {
+        const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!Speech) {
+            alert("നിങ്ങളുടെ ബ്രൗസർ വോയ്‌സ് ടൈപ്പിംഗ് പിന്തുണയ്ക്കുന്നില്ല.");
+            return;
+        }
+        
+        const rec = new Speech();
+        rec.lang = 'ml-IN'; 
+        rec.interimResults = false;
+        rec.maxAlternatives = 1;
+
+        rec.onstart = () => {
+            document.getElementById('voiceBtn').classList.add('voice-active');
+            document.getElementById('voiceStatus').innerText = "പറയുന്നത് കേൾക്കുന്നു...";
+        };
+
+        rec.onresult = (e) => {
+            const text = e.results[0][0].transcript;
+            const nums = text.match(/\d+/g);
+            if(nums && nums.length >= 2) {
+                document.getElementById('num').value = nums[0];
+                document.getElementById('count').value = nums[1];
+                addEntry();
+            } else {
+                alert("തിരിച്ചറിഞ്ഞില്ല! '115 10' എന്ന് കൃത്യമായി പറയുക.");
+            }
+        };
+
+        rec.onerror = (err) => {
+            console.error(err);
+            alert("വോയ്‌സ് പ്രവർത്തിക്കുന്നില്ല. മൈക്രോഫോൺ പെർമിഷൻ ഉണ്ടെന്ന് ഉറപ്പാക്കുക.");
+        };
+
+        rec.onend = () => {
+            document.getElementById('voiceBtn').classList.remove('voice-active');
+            document.getElementById('voiceStatus').innerText = "ശ്രദ്ധിക്കുന്നു... പറയൂ (മലയാളം)";
+        };
+
+        rec.start();
     }
 
+    // --- Login & Data ---
     function checkAutoLogin() {
         const l = localStorage.getItem("login_time");
         if(l && (new Date().getTime() - l < 12 * 60 * 60 * 1000)) showMain();
@@ -270,75 +353,111 @@
 
     function pressKey(k) {
         let inp = document.getElementById(currentInputId);
+        if(currentInputId === 'count' && isNewCount && k !== 'DEL') { inp.value = ""; isNewCount = false; }
         if(k === 'DEL') inp.value = inp.value.slice(0,-1);
         else {
             inp.value += k;
             if(currentInputId === 'num') {
                 let p = document.getElementById("posSelect").value;
                 let max = (p === "ABC") ? 3 : (p.length === 2 ? 2 : 1);
-                if(inp.value.length >= max) setFocus('count');
+                if(inp.value.length >= max) { setFocus('count'); isNewCount = true; }
             }
         }
         playEntrySound();
     }
 
     function addEntry() {
-        let n = document.getElementById("num").value, c = document.getElementById("count").value, p = document.getElementById("posSelect").value;
-        if(!n || !c) return;
-        customers[activeIndex].temp.push({p: p, n: n.padStart(p==='ABC'?3:p.length, '0'), c: parseInt(c)});
-        document.getElementById("num").value = ""; document.getElementById("count").value = "";
-        renderLive(); setFocus('num');
+        let n = document.getElementById("num").value, c = parseInt(document.getElementById("count").value), p = document.getElementById("posSelect").value;
+        if(!n || isNaN(c)) return;
+        n = n.padStart(p==='ABC'?3:p.length, '0');
+
+        let limit = parseInt(localStorage.getItem("count_limit"));
+        if(limit > 0) {
+            let total = customers[activeIndex].temp.reduce((acc, i) => (i.p === p && i.n === n ? acc + i.c : acc), 0);
+            if(total + c > limit && !confirm(`ലിമിറ്റ് കഴിഞ്ഞു! ചേർക്കണോ?`)) return;
+        }
+
+        let merged = false;
+        if(document.getElementById("mergeToggle").checked) {
+            let idx = customers[activeIndex].temp.findIndex(i => i.p === p && i.n === n);
+            if(idx > -1) {
+                let item = customers[activeIndex].temp.splice(idx, 1)[0];
+                item.c += c;
+                customers[activeIndex].temp.unshift(item); 
+                merged = true;
+            }
+        }
+        if(!merged) customers[activeIndex].temp.unshift({p: p, n: n, c: c}); 
+
+        document.getElementById("num").value = ""; 
+        renderLive(); setFocus('num'); isNewCount = true; 
     }
 
     function addBoxEntry() {
-        let n = document.getElementById("num").value, c = document.getElementById("count").value;
-        if(!n || !c) return;
+        let n = document.getElementById("num").value, c = parseInt(document.getElementById("count").value);
+        if(!n || isNaN(c)) return;
         let s = n.padStart(3, '0').split(''), res = [];
         for(let i=0;i<3;i++) for(let j=0;j<3;j++) for(let k=0;k<3;k++) if(i!==j && j!==k && i!==k) res.push(s[i]+s[j]+s[k]);
-        [...new Set(res)].forEach(bx => customers[activeIndex].temp.push({p: "ABC", n: bx, c: parseInt(c)}));
-        renderLive(); playEntrySound();
+        [...new Set(res)].forEach(bx => {
+            let idx = customers[activeIndex].temp.findIndex(i => i.p === "ABC" && i.n === bx);
+            if(idx > -1 && document.getElementById("mergeToggle").checked) {
+                let item = customers[activeIndex].temp.splice(idx, 1)[0];
+                item.c += c; customers[activeIndex].temp.unshift(item);
+            } else {
+                customers[activeIndex].temp.unshift({p: "ABC", n: bx, c: c});
+            }
+        });
+        document.getElementById("num").value = ""; renderLive(); playEntrySound(); setFocus('num');
     }
 
     function renderLive() {
         let h = ""; let t = 0;
-        let d = customers[activeIndex].temp || [];
-        d.slice().reverse().forEach((item, i) => {
-            let realIdx = d.length - 1 - i;
-            h += `<div class="item"><span>${item.p} ${item.n} -- ${item.c}</span><button class="del-btn" onclick="confirmDelete(${realIdx})"></button></div>`;
+        customers[activeIndex].temp.forEach((item, i) => {
+            h += `<div class="item ${i === 0 ? 'merged-highlight' : ''}"><span><b>${item.p}</b> ${item.n} -- ${item.c}</span><button class="del-btn" onclick="delItem(${i})">🗑️</button></div>`;
             t += item.c;
         });
-        document.getElementById("liveList").innerHTML = h || "<p style='text-align:center;'>No Data</p>";
+        document.getElementById("liveList").innerHTML = h || "<p style='text-align:center;'>ഡാറ്റ ഒന്നുമില്ല</p>";
         document.getElementById("liveTotal").innerText = t;
         localStorage.setItem("lottery_customers", JSON.stringify(customers));
+        setTimeout(() => { document.querySelectorAll('.item').forEach(el => el.classList.remove('merged-highlight')); }, 1000);
     }
 
-    function confirmDelete(idx) {
-        if(confirm("   ?")) {
-            customers[activeIndex].temp.splice(idx, 1);
-            renderLive();
-        }
-    }
-
-    function resetTab() { if(confirm("     ?")) { customers[activeIndex].temp = []; renderLive(); } }
+    function delItem(idx) { if(confirm("ഇത് നീക്കം ചെയ്യണോ?")) { customers[activeIndex].temp.splice(idx, 1); renderLive(); } }
+    function resetTab() { if(confirm("ഈ ടാബ് ക്ലിയർ ചെയ്യണോ?")) { customers[activeIndex].temp = []; customers[activeIndex].name = ""; initTabs(); } }
 
     function share() {
         let d = [...customers[activeIndex].temp], n = document.getElementById("customer").value;
         if(d.length === 0) return;
         lastDeletedData = { name: n, temp: d, index: activeIndex };
         document.getElementById("undoBtn").style.display = "block";
-        let txt = ` *${n || 'Customer'}*\n------------------\n`, t = 0;
+        let txt = `📋 *${n || 'Customer'}*\n------------------\n`, t = 0;
         d.forEach(i => { txt += `${i.p} ${i.n} - ${i.c}\n`; t += i.c; });
         txt += `------------------\nTotal: ${t}`;
-        customers[activeIndex].temp = []; renderLive();
-        window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
+        customers[activeIndex].temp = []; customers[activeIndex].name = ""; 
+        initTabs(); window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
     }
-    function undoClear() { if(lastDeletedData) { customers[lastDeletedData.index].temp = lastDeletedData.temp; document.getElementById("undoBtn").style.display = "none"; renderLive(); } }
+    
+    function undoClear() { 
+        if(lastDeletedData) { 
+            customers[lastDeletedData.index].temp = lastDeletedData.temp; 
+            customers[lastDeletedData.index].name = lastDeletedData.name; 
+            document.getElementById("undoBtn").style.display = "none"; 
+            initTabs(); 
+        } 
+    }
 
     function toggleSmart(s) { document.getElementById("smartModal").classList.toggle("hidden", !s); }
     function processSmartPaste() {
         let text = document.getElementById("smartPaste").value;
-        let regex = /(?:^|[^\d])(\d{3})(?:[^\d]+)(\d+)(?=[^\d]|$)/g, m;
-        while ((m = regex.exec(text)) !== null) customers[activeIndex].temp.push({p: "ABC", n: m[1], c: parseInt(m[2])});
+        let regex = /(\d{3})(?:[^\d]+)(\d+)/g, m;
+        while ((m = regex.exec(text)) !== null) {
+            let n = m[1], c = parseInt(m[2]);
+            let idx = customers[activeIndex].temp.findIndex(i => i.p === "ABC" && i.n === n);
+            if(idx > -1 && document.getElementById("mergeToggle").checked) {
+                let item = customers[activeIndex].temp.splice(idx, 1)[0];
+                item.c += c; customers[activeIndex].temp.unshift(item);
+            } else customers[activeIndex].temp.unshift({p: "ABC", n: n, c: c});
+        }
         toggleSmart(false); renderLive();
     }
 
@@ -347,129 +466,81 @@
     function backToMain() { document.getElementById("historyPage").classList.add("hidden"); document.getElementById("mainPage").classList.remove("hidden"); }
 
     function renderSaved(m = false) {
-        let h = ""; let t = 0; let list = [...permanent];
+        let h = ""; let list = [...permanent];
         if(m) {
             let dict = {};
             list.forEach(i => { let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; });
             list = Object.values(dict).sort((a,b)=>a.n.localeCompare(b.n));
         }
-        list.slice().reverse().forEach(i => { h += `<div class="item"><span>${i.p} ${i.n} -- ${i.c}</span></div>`; t += i.c; });
+        list.slice().reverse().forEach(i => h += `<div class="item"><span>${i.p} ${i.n} -- ${i.c}</span></div>`);
         document.getElementById("savedList").innerHTML = h;
     }
 
     function shareMergedData() {
-        if(permanent.length === 0) return;
-        let min = prompt("     ?", "1");
-        if(min === null) return;
-        min = parseInt(min) || 0;
+        let min = parseInt(prompt("Min count?", "1")) || 0;
         let dict = {};
         permanent.forEach(i => { let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; });
-        let list = Object.values(dict).sort((a,b)=>a.n.localeCompare(b.n));
-        let txt = ` *MERGED LIST (Min: ${min})*\n------------------\n`;
-        let count = 0;
-        list.forEach(i => { if(i.c >= min) { txt += `${i.p} ${i.n} - ${i.c}\n`; count++; } });
-        if(count === 0) { alert("   !"); return; }
+        let txt = `📑 *MERGED LIST*\n------------------\n`;
+        Object.values(dict).sort((a,b)=>a.n.localeCompare(b.n)).forEach(i => { if(i.c >= min) txt += `${i.p} ${i.n} - ${i.c}\n`; });
         window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
     }
 
     function checkWinners() {
         let winText = document.getElementById("winningPaste").value;
-        if(!winText || permanent.length === 0) return;
-        
-        //     3   
         let found = winText.match(/\d{3}/g);
         if(!found) return;
-
-        //        
-        //          
-        let numberPrizeMap = {};
-
-        found.forEach((num, i) => {
-            let currentPrize = 0;
-            if(i === 0) currentPrize = 5400;      // 1st Prize
-            else if(i === 1) currentPrize = 550;  // 2nd Prize
-            else if(i === 2) currentPrize = 270;  // 3rd Prize
-            else if(i === 3) currentPrize = 120;  // 4th Prize
-            else if(i === 4) currentPrize = 80;   // 5th Prize
-            else currentPrize = 35;               // Remaining
-
-            //         (Eg: 5400 + 80)
-            numberPrizeMap[num] = (numberPrizeMap[num] || 0) + currentPrize;
+        let first = found[0], wA = first[0], wB = first[1], wC = first[2];
+        let dict = {}; permanent.forEach(i => { let k=i.p+"-"+i.n; dict[k]=(dict[k]||0)+i.c; });
+        let rep = [], total = 0;
+        Object.keys(dict).forEach(k => {
+            let [p, n] = k.split("-"), count = dict[k], prize = 0;
+            if(p === "ABC" && found.includes(n)) prize = (n === first ? 5000 : 100);
+            if(p === "A" && n === wA) prize = 80;
+            if(p === "B" && n === wB) prize = 80;
+            if(p === "C" && n === wC) prize = 80;
+            if(prize > 0) { rep.push(`${p} ${n}: ${count} * ${prize} = ${count*prize}`); total += count*prize; }
         });
-
-        let first = found[0]; 
-        let wA = first[0], wB = first[1], wC = first[2];
-        
-        let mergedEntries = {};
-        permanent.forEach(item => { 
-            let key = item.p + "-" + item.n; 
-            mergedEntries[key] = (mergedEntries[key] || 0) + item.c; 
-        });
-        
-        let reportLines = []; 
-        let grandTotal = 0;
-
-        Object.keys(mergedEntries).forEach(key => {
-            let [pos, num] = key.split("-");
-            let count = mergedEntries[key];
-            let totalUnitPrize = 0;
-
-            // 1. ABC   (   map-   )
-            if(pos === "ABC" && numberPrizeMap[num]) {
-                totalUnitPrize += numberPrizeMap[num];
-            }
-            
-            // 2.    (A, B, C) - 80  
-            if(pos === "A" && num === wA) totalUnitPrize += 80;
-            if(pos === "B" && num === wB) totalUnitPrize += 80;
-            if(pos === "C" && num === wC) totalUnitPrize += 80;
-
-            if(totalUnitPrize > 0) {
-                let lineTotal = count * totalUnitPrize;
-                reportLines.push(`${pos} ${num}: ${count} * ${totalUnitPrize} = ${lineTotal}`);
-                grandTotal += lineTotal;
-            }
-        });
-
-        if(reportLines.length > 0) {
-            lastWinDetails = ` WIN REPORT \n1st: ${first}\n------------------\n${reportLines.join("\n")}\n------------------\nTOTAL: ${grandTotal}`;
-            document.getElementById("winDisplay").classList.remove("hidden");
-            document.getElementById("winContent").innerText = reportLines.join("\n");
-            document.getElementById("totalWinAmount").innerText = "" + grandTotal;
-        } else {
-            alert("No Winners Found");
-            document.getElementById("winDisplay").classList.add("hidden");
-        }
+        document.getElementById("winDisplay").classList.remove("hidden");
+        document.getElementById("winContent").innerText = rep.join("\n");
+        document.getElementById("totalWinAmount").innerText = "₹" + total;
+        lastWinDetails = `🏆 WIN REPORT\n${rep.join("\n")}\nTotal: ₹${total}`;
     }
 
     function shareWinningList() { if(lastWinDetails) window.location.href = "whatsapp://send?text=" + encodeURIComponent(lastWinDetails); }
-    function copyWinningList() { if(!lastWinDetails) return; navigator.clipboard.writeText(lastWinDetails).then(() => { alert("Winning Report Copied!"); }); }
-    function clearAllHistory() { if(confirm("    ?")) { permanent=[]; localStorage.setItem("perm_list", "[]"); renderSaved(); } }
+    function copyWinningList() { navigator.clipboard.writeText(lastWinDetails); alert("Copied!"); }
+    function clearAllHistory() { if(confirm("Clear all?")) { permanent=[]; localStorage.setItem("perm_list", "[]"); renderSaved(); } }
     function toggleStep(s) { document.getElementById("normalEntry").classList.toggle("hidden", s); document.getElementById("stepEntry").classList.toggle("hidden", !s); }
     function processStep() {
         let s = parseInt(document.getElementById("stepStart").value), e = parseInt(document.getElementById("stepEnd").value), c = parseInt(document.getElementById("stepCount").value), p = document.getElementById("posSelect").value, g = parseInt(document.getElementById("stepGap").value) || 1;
-        for(let i=s; i<=e; i+=g) customers[activeIndex].temp.push({p:p, n:i.toString().padStart(p==='ABC'?3:p.length,'0'), c:c});
+        for(let i=s; i<=e; i+=g) {
+            let n = i.toString().padStart(p==='ABC'?3:p.length,'0');
+            let idx = customers[activeIndex].temp.findIndex(item => item.p === p && item.n === n);
+            if(idx > -1 && document.getElementById("mergeToggle").checked) {
+                let item = customers[activeIndex].temp.splice(idx, 1)[0];
+                item.c += c; customers[activeIndex].temp.unshift(item);
+            } else customers[activeIndex].temp.unshift({p:p, n:n, c:c});
+        }
         toggleStep(false); renderLive(); playEntrySound();
     }
     function openSettings() { document.getElementById("settingsModal").classList.remove("hidden"); }
     function changeBtnSize(v) { document.documentElement.style.setProperty('--btn-pad', v + 'px'); }
     function toggleLayoutMode() {
         layoutMode = !layoutMode;
-        document.getElementById("layoutModeBtn").innerText = layoutMode ? "Disable Move Mode" : "Enable Move Mode";
         document.getElementById("layoutModeBtn").style.background = layoutMode ? "red" : "#444";
         ['btn-share', 'btn-smart', 'btn-add', 'btn-box', 'btn-step', 'btn-save', 'btn-history', 'btn-clear'].forEach(id => {
             let el = document.getElementById(id);
             if(layoutMode) { el.classList.add('draggable'); makeDraggable(el); }
-            else { el.classList.remove('draggable'); el.style.position = ""; el.onmousedown = null; el.ontouchstart = null; }
+            else { el.classList.remove('draggable'); el.style.position = ""; }
         });
     }
     function makeDraggable(el) {
-        let p1=0; let p2=0; let p3=0; let p4=0; el.onmousedown = dS; el.ontouchstart = dS;
+        let p1=0, p2=0, p3=0, p4=0; el.onmousedown = dS; el.ontouchstart = dS;
         function dS(e) { e.preventDefault(); p3 = e.clientX || e.touches[0].clientX; p4 = e.clientY || e.touches[0].clientY; document.onmouseup = dE; document.ontouchend = dE; document.onmousemove = dM; document.ontouchmove = dM; }
-        function dM(e) { e.preventDefault(); let x = e.clientX || e.touches[0].clientX; let y = e.clientY || e.touches[0].clientY; p1=p3-x; p2=p4-y; p3=x; p4=y; el.style.top = (el.offsetTop-p2)+"px"; el.style.left = (el.offsetLeft-p1)+"px"; el.style.position = "absolute"; }
+        function dM(e) { e.preventDefault(); let x = e.clientX || e.touches[0].clientX, y = e.clientY || e.touches[0].clientY; p1=p3-x; p2=p4-y; p3=x; p4=y; el.style.top = (el.offsetTop-p2)+"px"; el.style.left = (el.offsetLeft-p1)+"px"; el.style.position = "absolute"; }
         function dE() { document.onmouseup = null; document.onmousemove = null; document.ontouchend = null; document.ontouchmove = null; }
     }
     function saveCustomStyles() {
+        saveSettings();
         let s = { pad: getComputedStyle(document.documentElement).getPropertyValue('--btn-pad'), pos: {} };
         ['btn-share', 'btn-smart', 'btn-add', 'btn-box', 'btn-step', 'btn-save', 'btn-history', 'btn-clear'].forEach(id => {
             let el = document.getElementById(id);
