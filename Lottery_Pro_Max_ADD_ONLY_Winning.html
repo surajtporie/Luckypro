@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#000000">
 
 <link rel="manifest" href="manifest.json">
-<title>Lottery Pro Max - Custom Edition</title>
+<title>Lottery Pro Max - Clean Edition</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -28,19 +28,13 @@
     .tab { padding: 8px 15px; background: #333; border-radius: 20px; font-size: 12px; cursor: pointer; white-space: nowrap; }
     .tab.active { background: var(--primary); color: white; border: 1px solid #fff; }
 
-    .list { margin-top: 10px; max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; background: #181818; }
+    .list { margin-top: 10px; max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; background: #181818; }
     .item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border); transition: background 0.5s; }
     .merged-highlight { background: #2e7d32 !important; }
 
     .total-section { display: flex; justify-content: space-between; padding: 10px; background: #333; border-radius: 8px; margin-top: 10px; font-weight: bold; border: 1px solid var(--secondary); color: var(--secondary); font-size: 18px; }
     
     .hidden { display: none !important; }
-
-    /* വോയ്‌സ് സെക്ഷൻ സ്റ്റൈൽ - ടോപ്പിൽ */
-    .top-voice-container { background: #263238; padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: center; border: 1px dashed var(--secondary); }
-    .voice-btn { background: var(--danger) !important; color: white; border-radius: 50%; width: 55px; height: 55px; font-size: 26px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; border: none; box-shadow: 0 0 15px rgba(211,47,47,0.4); transition: 0.3s; }
-    .voice-active { background: #ff0000 !important; animation: pulse 1s infinite; transform: scale(1.1); }
-    @keyframes pulse { 0% { box-shadow: 0 0 0 0px rgba(211,47,47,0.7); } 100% { box-shadow: 0 0 0 15px rgba(211,47,47,0); } }
 
     .toggle-row { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; padding: 5px; background: #2c2c2c; border-radius: 8px; }
     .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
@@ -81,7 +75,7 @@
         <input type="range" min="5" max="30" value="12" oninput="changeBtnSize(this.value)">
 
         <div class="toggle-row">
-            <span>Entry Sound 🔊</span>
+            <span>Entry Sound ðŸ”Š</span>
             <label class="switch">
                 <input type="checkbox" id="soundToggle" checked onchange="saveSettings()">
                 <span class="slider"></span>
@@ -89,7 +83,7 @@
         </div>
 
         <div class="toggle-row">
-            <span>Duplicate Merge 🧬</span>
+            <span>Duplicate Merge ðŸ§¬</span>
             <label class="switch">
                 <input type="checkbox" id="mergeToggle" onchange="saveSettings()">
                 <span class="slider"></span>
@@ -97,7 +91,7 @@
         </div>
 
         <div style="padding: 5px; background: #2c2c2c; border-radius: 8px; margin-top: 10px;">
-            <label style="font-size: 14px;">Count Limit Alert ⚠️</label>
+            <label style="font-size: 14px;">Count Limit Alert âš ï¸</label>
             <input id="limitInput" type="number" placeholder="Set Limit (e.g. 100)" style="margin-top:5px;" oninput="saveSettings()">
         </div>
 
@@ -121,19 +115,14 @@
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <h3 style="margin:0; color:var(--primary);">Lottery Pro</h3>
             <div style="display:flex; gap:5px;">
-                <button onclick="openSettings()" style="width:auto; background:none; font-size:20px; padding:5px;">⚙️</button>
+                <button onclick="openSettings()" style="width:auto; background:none; font-size:20px; padding:5px;">âš™ï¸</button>
                 <button id="btn-share" class="custom-btn" onclick="share()" style="width:auto; font-size:11px; background:#25D366; padding:5px 12px;">SHARE</button>
                 <button id="btn-smart" class="custom-btn" onclick="toggleSmart(true)" style="width:auto; font-size:11px; background:var(--secondary); padding:5px 12px;">SMART</button>
             </div>
         </div>
 
-        <div class="top-voice-container">
-            <button class="voice-btn" id="voiceBtn" onclick="startVoice()">🎙️</button>
-            <p id="voiceStatus" style="font-size:11px; color:var(--secondary); margin-top:5px; font-weight:bold;">ശ്രദ്ധിക്കുന്നു... പറയൂ (മലയാളം)</p>
-        </div>
-
         <div class="tabs" id="tabsList"></div>
-        <input id="customer" placeholder="കസ്റ്റമർ പേര്" oninput="updateTabName()">
+        <input id="customer" placeholder="à´•à´¸àµà´±àµà´±à´®àµ¼ à´ªàµ‡à´°àµ" oninput="updateTabName()">
         
         <div id="normalEntry">
             <div class="row">
@@ -187,7 +176,7 @@
         <button style="background:var(--secondary);" onclick="checkWinners()">CHECK WINNINGS</button>
         <div id="winDisplay" class="hidden">
             <div id="winContent" style="background:var(--win-bg); padding:10px; border-radius:8px; margin-top:10px; white-space: pre-wrap; font-family: monospace;"></div>
-            <div class="total-section"><span>TOTAL WIN</span><span id="totalWinAmount">₹0</span></div>
+            <div class="total-section"><span>TOTAL WIN</span><span id="totalWinAmount">â‚¹0</span></div>
             <div class="row">
                 <button style="background:#25D366; flex:1;" onclick="shareWinningList()">SHARE</button>
                 <button style="background:#0288d1; flex:1;" onclick="copyWinningList()">COPY</button>
@@ -225,7 +214,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // --- Settings & UI ---
     function saveSettings() {
         localStorage.setItem("sound_enabled", document.getElementById("soundToggle").checked);
         localStorage.setItem("merge_enabled", document.getElementById("mergeToggle").checked);
@@ -276,50 +264,6 @@
         } catch(e) {}
     }
 
-    // --- Voice Recognition Fix ---
-    function startVoice() {
-        const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!Speech) {
-            alert("നിങ്ങളുടെ ബ്രൗസർ വോയ്‌സ് ടൈപ്പിംഗ് പിന്തുണയ്ക്കുന്നില്ല.");
-            return;
-        }
-        
-        const rec = new Speech();
-        rec.lang = 'ml-IN'; 
-        rec.interimResults = false;
-        rec.maxAlternatives = 1;
-
-        rec.onstart = () => {
-            document.getElementById('voiceBtn').classList.add('voice-active');
-            document.getElementById('voiceStatus').innerText = "പറയുന്നത് കേൾക്കുന്നു...";
-        };
-
-        rec.onresult = (e) => {
-            const text = e.results[0][0].transcript;
-            const nums = text.match(/\d+/g);
-            if(nums && nums.length >= 2) {
-                document.getElementById('num').value = nums[0];
-                document.getElementById('count').value = nums[1];
-                addEntry();
-            } else {
-                alert("തിരിച്ചറിഞ്ഞില്ല! '115 10' എന്ന് കൃത്യമായി പറയുക.");
-            }
-        };
-
-        rec.onerror = (err) => {
-            console.error(err);
-            alert("വോയ്‌സ് പ്രവർത്തിക്കുന്നില്ല. മൈക്രോഫോൺ പെർമിഷൻ ഉണ്ടെന്ന് ഉറപ്പാക്കുക.");
-        };
-
-        rec.onend = () => {
-            document.getElementById('voiceBtn').classList.remove('voice-active');
-            document.getElementById('voiceStatus').innerText = "ശ്രദ്ധിക്കുന്നു... പറയൂ (മലയാളം)";
-        };
-
-        rec.start();
-    }
-
-    // --- Login & Data ---
     function checkAutoLogin() {
         const l = localStorage.getItem("login_time");
         if(l && (new Date().getTime() - l < 12 * 60 * 60 * 1000)) showMain();
@@ -374,7 +318,7 @@
         let limit = parseInt(localStorage.getItem("count_limit"));
         if(limit > 0) {
             let total = customers[activeIndex].temp.reduce((acc, i) => (i.p === p && i.n === n ? acc + i.c : acc), 0);
-            if(total + c > limit && !confirm(`ലിമിറ്റ് കഴിഞ്ഞു! ചേർക്കണോ?`)) return;
+            if(total + c > limit && !confirm(`à´²à´¿à´®à´¿à´±àµà´±àµ à´•à´´à´¿à´žàµà´žàµ! à´šàµ‡àµ¼à´•àµà´•à´£àµ‹?`)) return;
         }
 
         let merged = false;
@@ -413,24 +357,24 @@
     function renderLive() {
         let h = ""; let t = 0;
         customers[activeIndex].temp.forEach((item, i) => {
-            h += `<div class="item ${i === 0 ? 'merged-highlight' : ''}"><span><b>${item.p}</b> ${item.n} -- ${item.c}</span><button class="del-btn" onclick="delItem(${i})">🗑️</button></div>`;
+            h += `<div class="item ${i === 0 ? 'merged-highlight' : ''}"><span><b>${item.p}</b> ${item.n} -- ${item.c}</span><button class="del-btn" onclick="delItem(${i})">ðŸ—‘ï¸</button></div>`;
             t += item.c;
         });
-        document.getElementById("liveList").innerHTML = h || "<p style='text-align:center;'>ഡാറ്റ ഒന്നുമില്ല</p>";
+        document.getElementById("liveList").innerHTML = h || "<p style='text-align:center;'>à´¡à´¾à´±àµà´± à´’à´¨àµà´¨àµà´®à´¿à´²àµà´²</p>";
         document.getElementById("liveTotal").innerText = t;
         localStorage.setItem("lottery_customers", JSON.stringify(customers));
         setTimeout(() => { document.querySelectorAll('.item').forEach(el => el.classList.remove('merged-highlight')); }, 1000);
     }
 
-    function delItem(idx) { if(confirm("ഇത് നീക്കം ചെയ്യണോ?")) { customers[activeIndex].temp.splice(idx, 1); renderLive(); } }
-    function resetTab() { if(confirm("ഈ ടാബ് ക്ലിയർ ചെയ്യണോ?")) { customers[activeIndex].temp = []; customers[activeIndex].name = ""; initTabs(); } }
+    function delItem(idx) { if(confirm("à´‡à´¤àµ à´¨àµ€à´•àµà´•à´‚ à´šàµ†à´¯àµà´¯à´£àµ‹?")) { customers[activeIndex].temp.splice(idx, 1); renderLive(); } }
+    function resetTab() { if(confirm("à´ˆ à´Ÿà´¾à´¬àµ à´•àµà´²à´¿à´¯àµ¼ à´šàµ†à´¯àµà´¯à´£àµ‹?")) { customers[activeIndex].temp = []; customers[activeIndex].name = ""; initTabs(); } }
 
     function share() {
         let d = [...customers[activeIndex].temp], n = document.getElementById("customer").value;
         if(d.length === 0) return;
         lastDeletedData = { name: n, temp: d, index: activeIndex };
         document.getElementById("undoBtn").style.display = "block";
-        let txt = `📋 *${n || 'Customer'}*\n------------------\n`, t = 0;
+        let txt = `ðŸ“‹ *${n || 'Customer'}*\n------------------\n`, t = 0;
         d.forEach(i => { txt += `${i.p} ${i.n} - ${i.c}\n`; t += i.c; });
         txt += `------------------\nTotal: ${t}`;
         customers[activeIndex].temp = []; customers[activeIndex].name = ""; 
@@ -480,7 +424,7 @@
         let min = parseInt(prompt("Min count?", "1")) || 0;
         let dict = {};
         permanent.forEach(i => { let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; });
-        let txt = `📑 *MERGED LIST*\n------------------\n`;
+        let txt = `ðŸ“‘ *MERGED LIST*\n------------------\n`;
         Object.values(dict).sort((a,b)=>a.n.localeCompare(b.n)).forEach(i => { if(i.c >= min) txt += `${i.p} ${i.n} - ${i.c}\n`; });
         window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
     }
@@ -502,8 +446,8 @@
         });
         document.getElementById("winDisplay").classList.remove("hidden");
         document.getElementById("winContent").innerText = rep.join("\n");
-        document.getElementById("totalWinAmount").innerText = "₹" + total;
-        lastWinDetails = `🏆 WIN REPORT\n${rep.join("\n")}\nTotal: ₹${total}`;
+        document.getElementById("totalWinAmount").innerText = "â‚¹" + total;
+        lastWinDetails = `ðŸ† WIN REPORT\n${rep.join("\n")}\nTotal: â‚¹${total}`;
     }
 
     function shareWinningList() { if(lastWinDetails) window.location.href = "whatsapp://send?text=" + encodeURIComponent(lastWinDetails); }
