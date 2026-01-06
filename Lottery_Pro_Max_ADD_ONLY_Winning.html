@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#000000">
 
 <link rel="manifest" href="manifest.json">
-<title>Lottery Pro Max - Clean Edition</title>
+<title>Lottery Pro Max - Premium Edition</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -75,7 +75,7 @@
         <input type="range" min="5" max="30" value="12" oninput="changeBtnSize(this.value)">
 
         <div class="toggle-row">
-            <span>Entry Sound ðŸ”Š</span>
+            <span>Entry Sound 🔊</span>
             <label class="switch">
                 <input type="checkbox" id="soundToggle" checked onchange="saveSettings()">
                 <span class="slider"></span>
@@ -83,7 +83,7 @@
         </div>
 
         <div class="toggle-row">
-            <span>Duplicate Merge ðŸ§¬</span>
+            <span>Duplicate Merge 🧬</span>
             <label class="switch">
                 <input type="checkbox" id="mergeToggle" onchange="saveSettings()">
                 <span class="slider"></span>
@@ -91,7 +91,7 @@
         </div>
 
         <div style="padding: 5px; background: #2c2c2c; border-radius: 8px; margin-top: 10px;">
-            <label style="font-size: 14px;">Count Limit Alert âš ï¸</label>
+            <label style="font-size: 14px;">Count Limit Alert ⚠️</label>
             <input id="limitInput" type="number" placeholder="Set Limit (e.g. 100)" style="margin-top:5px;" oninput="saveSettings()">
         </div>
 
@@ -115,14 +115,15 @@
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <h3 style="margin:0; color:var(--primary);">Lottery Pro</h3>
             <div style="display:flex; gap:5px;">
-                <button onclick="openSettings()" style="width:auto; background:none; font-size:20px; padding:5px;">âš™ï¸</button>
+                <button onclick="openSettings()" style="width:auto; background:none; font-size:20px; padding:5px;">⚙️</button>
                 <button id="btn-share" class="custom-btn" onclick="share()" style="width:auto; font-size:11px; background:#25D366; padding:5px 12px;">SHARE</button>
+                <button id="btn-sort" class="custom-btn" onclick="sortCurrentList()" style="width:auto; font-size:11px; background:#0288d1; padding:5px 12px;">SORT</button>
                 <button id="btn-smart" class="custom-btn" onclick="toggleSmart(true)" style="width:auto; font-size:11px; background:var(--secondary); padding:5px 12px;">SMART</button>
             </div>
         </div>
 
         <div class="tabs" id="tabsList"></div>
-        <input id="customer" placeholder="à´•à´¸àµà´±àµà´±à´®àµ¼ à´ªàµ‡à´°àµ" oninput="updateTabName()">
+        <input id="customer" placeholder="കസ്റ്റമർ പേര്" oninput="updateTabName()">
         
         <div id="normalEntry">
             <div class="row">
@@ -176,7 +177,7 @@
         <button style="background:var(--secondary);" onclick="checkWinners()">CHECK WINNINGS</button>
         <div id="winDisplay" class="hidden">
             <div id="winContent" style="background:var(--win-bg); padding:10px; border-radius:8px; margin-top:10px; white-space: pre-wrap; font-family: monospace;"></div>
-            <div class="total-section"><span>TOTAL WIN</span><span id="totalWinAmount">â‚¹0</span></div>
+            <div class="total-section"><span>TOTAL WIN</span><span id="totalWinAmount">₹0</span></div>
             <div class="row">
                 <button style="background:#25D366; flex:1;" onclick="shareWinningList()">SHARE</button>
                 <button style="background:#0288d1; flex:1;" onclick="copyWinningList()">COPY</button>
@@ -318,7 +319,7 @@
         let limit = parseInt(localStorage.getItem("count_limit"));
         if(limit > 0) {
             let total = customers[activeIndex].temp.reduce((acc, i) => (i.p === p && i.n === n ? acc + i.c : acc), 0);
-            if(total + c > limit && !confirm(`à´²à´¿à´®à´¿à´±àµà´±àµ à´•à´´à´¿à´žàµà´žàµ! à´šàµ‡àµ¼à´•àµà´•à´£àµ‹?`)) return;
+            if(total + c > limit && !confirm(`ലിമിറ്റ് കഴിഞ്ഞു! ചേർക്കണോ?`)) return;
         }
 
         let merged = false;
@@ -357,24 +358,29 @@
     function renderLive() {
         let h = ""; let t = 0;
         customers[activeIndex].temp.forEach((item, i) => {
-            h += `<div class="item ${i === 0 ? 'merged-highlight' : ''}"><span><b>${item.p}</b> ${item.n} -- ${item.c}</span><button class="del-btn" onclick="delItem(${i})">ðŸ—‘ï¸</button></div>`;
+            h += `<div class="item ${i === 0 ? 'merged-highlight' : ''}"><span><b>${item.p}</b> ${item.n} -- ${item.c}</span><button class="del-btn" onclick="delItem(${i})">🗑️</button></div>`;
             t += item.c;
         });
-        document.getElementById("liveList").innerHTML = h || "<p style='text-align:center;'>à´¡à´¾à´±àµà´± à´’à´¨àµà´¨àµà´®à´¿à´²àµà´²</p>";
+        document.getElementById("liveList").innerHTML = h || "<p style='text-align:center;'>ഡാറ്റ ഒന്നുമില്ല</p>";
         document.getElementById("liveTotal").innerText = t;
         localStorage.setItem("lottery_customers", JSON.stringify(customers));
         setTimeout(() => { document.querySelectorAll('.item').forEach(el => el.classList.remove('merged-highlight')); }, 1000);
     }
 
-    function delItem(idx) { if(confirm("à´‡à´¤àµ à´¨àµ€à´•àµà´•à´‚ à´šàµ†à´¯àµà´¯à´£àµ‹?")) { customers[activeIndex].temp.splice(idx, 1); renderLive(); } }
-    function resetTab() { if(confirm("à´ˆ à´Ÿà´¾à´¬àµ à´•àµà´²à´¿à´¯àµ¼ à´šàµ†à´¯àµà´¯à´£àµ‹?")) { customers[activeIndex].temp = []; customers[activeIndex].name = ""; initTabs(); } }
+    function sortCurrentList() {
+        customers[activeIndex].temp.sort((a, b) => b.c - a.c);
+        renderLive();
+    }
+
+    function delItem(idx) { if(confirm("ഇത് നീക്കം ചെയ്യണോ?")) { customers[activeIndex].temp.splice(idx, 1); renderLive(); } }
+    function resetTab() { if(confirm("ഈ ടാബ് ക്ലിയർ ചെയ്യണോ?")) { customers[activeIndex].temp = []; customers[activeIndex].name = ""; initTabs(); } }
 
     function share() {
         let d = [...customers[activeIndex].temp], n = document.getElementById("customer").value;
         if(d.length === 0) return;
         lastDeletedData = { name: n, temp: d, index: activeIndex };
         document.getElementById("undoBtn").style.display = "block";
-        let txt = `ðŸ“‹ *${n || 'Customer'}*\n------------------\n`, t = 0;
+        let txt = `📋 *${n || 'Customer'}*\n------------------\n`, t = 0;
         d.forEach(i => { txt += `${i.p} ${i.n} - ${i.c}\n`; t += i.c; });
         txt += `------------------\nTotal: ${t}`;
         customers[activeIndex].temp = []; customers[activeIndex].name = ""; 
@@ -424,7 +430,7 @@
         let min = parseInt(prompt("Min count?", "1")) || 0;
         let dict = {};
         permanent.forEach(i => { let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; });
-        let txt = `ðŸ“‘ *MERGED LIST*\n------------------\n`;
+        let txt = `📑 *MERGED LIST*\n------------------\n`;
         Object.values(dict).sort((a,b)=>a.n.localeCompare(b.n)).forEach(i => { if(i.c >= min) txt += `${i.p} ${i.n} - ${i.c}\n`; });
         window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
     }
@@ -433,21 +439,53 @@
         let winText = document.getElementById("winningPaste").value;
         let found = winText.match(/\d{3}/g);
         if(!found) return;
+        
         let first = found[0], wA = first[0], wB = first[1], wC = first[2];
-        let dict = {}; permanent.forEach(i => { let k=i.p+"-"+i.n; dict[k]=(dict[k]||0)+i.c; });
-        let rep = [], total = 0;
-        Object.keys(dict).forEach(k => {
-            let [p, n] = k.split("-"), count = dict[k], prize = 0;
-            if(p === "ABC" && found.includes(n)) prize = (n === first ? 5000 : 100);
-            if(p === "A" && n === wA) prize = 80;
-            if(p === "B" && n === wB) prize = 80;
-            if(p === "C" && n === wC) prize = 80;
-            if(prize > 0) { rep.push(`${p} ${n}: ${count} * ${prize} = ${count*prize}`); total += count*prize; }
+        let dict = {}; 
+        permanent.forEach(i => { 
+            let k = i.p + "-" + i.n; 
+            dict[k] = (dict[k] || 0) + i.c; 
         });
+        
+        let rep = [], total = 0;
+        
+        Object.keys(dict).forEach(k => {
+            let [p, n] = k.split("-"), count = dict[k], totalPrizeForThisNum = 0;
+            let winDetails = [];
+
+            if(p === "ABC") {
+                // ഒരു നമ്പറിന് ഒന്നിലധികം സമ്മാനങ്ങൾ ഉണ്ടോ എന്ന് പരിശോധിക്കുന്നു
+                if(n === first) { totalPrizeForThisNum += 5400; winDetails.push("1st"); }
+                if(found.length > 1 && n === found[1]) { totalPrizeForThisNum += 550; winDetails.push("2nd"); }
+                if(found.length > 2 && n === found[2]) { totalPrizeForThisNum += 270; winDetails.push("3rd"); }
+                if(found.length > 3 && n === found[3]) { totalPrizeForThisNum += 120; winDetails.push("4th"); }
+                if(found.length > 4 && n === found[4]) { totalPrizeForThisNum += 80; winDetails.push("5th"); }
+                
+                // 6-ാം സമ്മാനം മുതൽ (ബാക്കിയുള്ള എല്ലാ നമ്പറുകൾക്കും 35 വീതം)
+                for(let i = 5; i < found.length; i++) {
+                    if(found[i] === n) {
+                        totalPrizeForThisNum += 35;
+                        winDetails.push("6th+");
+                    }
+                }
+            }
+            
+            // Single Digits
+            if(p === "A" && n === wA) { totalPrizeForThisNum += 80; winDetails.push("A"); }
+            if(p === "B" && n === wB) { totalPrizeForThisNum += 80; winDetails.push("B"); }
+            if(p === "C" && n === wC) { totalPrizeForThisNum += 80; winDetails.push("C"); }
+            
+            if(totalPrizeForThisNum > 0) { 
+                let detailStr = winDetails.join("+");
+                rep.push(`${p} ${n} (${detailStr}): ${count} * ${totalPrizeForThisNum} = ${count * totalPrizeForThisNum}`); 
+                total += count * totalPrizeForThisNum; 
+            }
+        });
+        
         document.getElementById("winDisplay").classList.remove("hidden");
-        document.getElementById("winContent").innerText = rep.join("\n");
-        document.getElementById("totalWinAmount").innerText = "â‚¹" + total;
-        lastWinDetails = `ðŸ† WIN REPORT\n${rep.join("\n")}\nTotal: â‚¹${total}`;
+        document.getElementById("winContent").innerText = rep.length > 0 ? rep.join("\n") : "വിജയികൾ ഇല്ല";
+        document.getElementById("totalWinAmount").innerText = "₹" + total;
+        lastWinDetails = `🏆 WIN REPORT\n${rep.join("\n")}\nTotal: ₹${total}`;
     }
 
     function shareWinningList() { if(lastWinDetails) window.location.href = "whatsapp://send?text=" + encodeURIComponent(lastWinDetails); }
@@ -471,7 +509,7 @@
     function toggleLayoutMode() {
         layoutMode = !layoutMode;
         document.getElementById("layoutModeBtn").style.background = layoutMode ? "red" : "#444";
-        ['btn-share', 'btn-smart', 'btn-add', 'btn-box', 'btn-step', 'btn-save', 'btn-history', 'btn-clear'].forEach(id => {
+        ['btn-share', 'btn-smart', 'btn-add', 'btn-box', 'btn-step', 'btn-save', 'btn-history', 'btn-clear', 'btn-sort'].forEach(id => {
             let el = document.getElementById(id);
             if(layoutMode) { el.classList.add('draggable'); makeDraggable(el); }
             else { el.classList.remove('draggable'); el.style.position = ""; }
@@ -486,7 +524,7 @@
     function saveCustomStyles() {
         saveSettings();
         let s = { pad: getComputedStyle(document.documentElement).getPropertyValue('--btn-pad'), pos: {} };
-        ['btn-share', 'btn-smart', 'btn-add', 'btn-box', 'btn-step', 'btn-save', 'btn-history', 'btn-clear'].forEach(id => {
+        ['btn-share', 'btn-smart', 'btn-add', 'btn-box', 'btn-step', 'btn-save', 'btn-history', 'btn-clear', 'btn-sort'].forEach(id => {
             let el = document.getElementById(id);
             s.pos[id] = { t: el.style.top, l: el.style.left, p: el.style.position };
         });
