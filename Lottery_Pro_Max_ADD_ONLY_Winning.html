@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#000000">
+
+<link rel="manifest" href="manifest.json">
+<title>Lottery Pro Max - Custom Edition</title>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<style>
+    :root { --bg: #121212; --card-bg: #1e1e1e; --text: #e0e0e0; --primary: #7b1fa2; --secondary: #00c853; --danger: #d32f2f; --border: #333; --win-bg: #1b5e20; --btn-pad: 12px; }
+    body { margin: 0; font-family: sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 10px; padding-bottom: 50px; overflow-x: hidden; transition: padding 0.3s; }
+    .card { width: 100%; max-width: 450px; background: var(--card-bg); border-radius: 15px; padding: 15px; box-sizing: border-box; position: relative; min-height: 500px; }
+    input, button, textarea, select { width: 100%; padding: var(--btn-pad); margin: 5px 0; font-size: 16px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; background: #2c2c2c; color: white; outline: none; }
+    .row { display: flex; gap: 5px; align-items: center; }
+    
+    .custom-btn { font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; transition: 0.3s; touch-action: none; position: relative; }
+    .draggable { border: 2px dashed #ffff00 !important; z-index: 1000 !important; }
+
+    .tabs { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px; }
+    .tab { padding: 8px 15px; background: #333; border-radius: 20px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+    .tab.active { background: var(--primary); color: white; border: 1px solid #fff; }
+
+    .list { margin-top: 10px; max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; background: #181818; }
+    .item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border); }
+    .total-section { display: flex; justify-content: space-between; padding: 10px; background: #333; border-radius: 8px; margin-top: 10px; font-weight: bold; border: 1px solid var(--secondary); color: var(--secondary); font-size: 18px; }
+    
+    .hidden { display: none !important; }
+
+    .toggle-row { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; padding: 5px; background: #2c2c2c; border-radius: 8px; }
+    .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .4s; border-radius: 20px; }
+    .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--secondary); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
+    .modal-content { background: var(--card-bg); width: 100%; max-width: 400px; padding: 20px; border-radius: 15px; border: 1px solid var(--primary); }
+    
+    .fixed-keypad { position: fixed; bottom: -350px; left: 0; width: 100%; background: #1a1a1a; padding: 10px; box-sizing: border-box; border-top: 2px solid var(--primary); z-index: 3000; transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .keypad-show { bottom: 0; }
+    .keypad-row { display: flex; gap: 5px; margin-bottom: 5px; }
+    .keypad-row button { flex: 1; height: 50px; font-size: 22px; background: #333; color: white; border-radius: 8px; border: none; }
+    .input-focus { border: 2px solid var(--secondary) !important; background: #3d3d3d !important; }
+
+    .del-btn { background: none; border: none; color: var(--danger); font-size: 18px; cursor: pointer; padding: 5px 10px; }
+</style>
+</head>
+<body onclick="hideKeypadOnOutside(event)" onload="checkAutoLogin(); loadCustomStyles(); loadSoundPref();">
+
+<div id="loginOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#121212; z-index:9999; display:flex; justify-content:center; align-items:center;">
+    <div class="card" style="max-width:320px; text-align:center; min-height: auto;">
+        <h2 style="color:var(--primary);">Lottery Pro</h2>
+        <input id="loginPhone" type="tel" placeholder="Mobile Number" style="text-align:center;">
+        <button style="background:var(--primary); color:white;" onclick="checkLogin()">UNLOCK</button>
+    </div>
+</div>
+
+<div id="settingsModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <h3 style="color:var(--primary); margin:0;">Settings</h3>
+        <label>Button Size:</label>
+        <input type="range" min="5" max="30" value="12" oninput="changeBtnSize(this.value)">
+        <div class="toggle-row">
+            <span>Entry Sound </span>
+            <label class="switch">
+                <input type="checkbox" id="soundToggle" checked onchange="saveSoundPref()">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <button onclick="toggleLayoutMode()" id="layoutModeBtn" style="background:#444;">Enable Move Mode</button>
+        <button style="background:var(--secondary);" onclick="saveCustomStyles()">SAVE & CLOSE</button>
+        <button style="background:var(--danger);" onclick="resetStyles()">RESET ALL</button>
+    </div>
+</div>
+
+<div id="smartModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <h3 style="color:var(--secondary); margin-top:0;">Smart Paste (ABC)</h3>
+        <textarea id="smartPaste" placeholder="Paste here..." style="height:150px;"></textarea>
+        <button style="background:var(--secondary);" onclick="processSmartPaste()">ADD DATA</button>
+        <button style="background:var(--danger);" onclick="toggleSmart(false)">CLOSE</button>
+    </div>
+</div>
+
+<div class="screen hidden" id="mainPage">
+    <div class="card" id="mainCard">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h3 style="margin:0; color:var(--primary);">Lottery Pro</h3>
+            <div style="display:flex; gap:5px;">
+                <button onclick="openSettings()" style="width:auto; background:none; font-size:20px; padding:5px;"></button>
+                <button id="btn-share" class="custom-btn" onclick="share()" style="width:auto; font-size:11px; background:#25D366; padding:5px 12px;">SHARE</button>
+                <button id="btn-smart" class="custom-btn" onclick="toggleSmart(true)" style="width:auto; font-size:11px; background:var(--secondary); padding:5px 12px;">SMART</button>
+            </div>
+        </div>
+
+        <div class="tabs" id="tabsList"></div>
+        <input id="customer" placeholder=" " oninput="updateTabName()">
+        
+        <div id="normalEntry">
+            <div class="row">
+                <select id="posSelect" style="width:85px; background:#455a64; font-weight:bold;">
+                    <option value="ABC">ABC</option>
+                    <option value="A">A</option><option value="B">B</option><option value="C">C</option>
+                    <option value="AB">AB</option><option value="BC">BC</option><option value="AC">AC</option>
+                </select>
+                <input id="num" placeholder="No" readonly onclick="setFocus('num', event)" style="flex:2;">
+                <input id="count" placeholder="Count" readonly onclick="setFocus('count', event)" style="flex:2;">
+            </div>
+            <div class="row">
+                <button id="btn-add" class="custom-btn" style="background:var(--primary); flex: 1;" onclick="addEntry()">ADD</button>
+                <button id="btn-box" class="custom-btn" style="background:#f57c00; flex: 1;" onclick="addBoxEntry()">BOX</button>
+                <button id="btn-step" class="custom-btn" style="background:#0288d1; flex: 1;" onclick="toggleStep(true)">STEP</button>
+            </div>
+        </div>
+
+        <div id="stepEntry" class="hidden" style="background:#263238; padding:10px; border-radius:8px; margin-bottom:10px;">
+            <div class="row">
+                <input id="stepStart" placeholder="Start" readonly onclick="setFocus('stepStart', event)" style="flex:1;">
+                <input id="stepEnd" placeholder="End" readonly onclick="setFocus('stepEnd', event)" style="flex:1;">
+            </div>
+            <div class="row">
+                <input id="stepGap" placeholder="Gap" readonly onclick="setFocus('stepGap', event)" style="flex:1;" value="1">
+                <input id="stepCount" placeholder="Count" readonly onclick="setFocus('stepCount', event)" style="flex:1;">
+            </div>
+            <div class="row">
+                <button style="background:var(--secondary); flex: 1;" onclick="processStep()">ADD STEP</button>
+                <button style="background:var(--danger); flex: 1;" onclick="toggleStep(false)">CANCEL</button>
+            </div>
+        </div>
+
+        <div class="total-section"><span>TOTAL COUNT</span><span id="liveTotal">0</span></div>
+        <div class="list" id="liveList"></div>
+        
+        <div class="row" style="margin-top:10px;">
+            <button id="btn-save" class="custom-btn" style="background:#2e7d32; flex: 1;" onclick="saveDay()">SAVE HISTORY</button>
+        </div>
+        <button id="undoBtn" style="background:#ff9800; display:none; margin-top:5px;" onclick="undoClear()">RESTORE LAST (UNDO)</button>
+        <button id="btn-history" class="custom-btn" style="background:#455a64; margin-top:10px;" onclick="openHistory()">HISTORY & WINNINGS</button>
+        <button id="btn-clear" class="custom-btn" style="background:var(--danger); margin-top: 15px;" onclick="resetTab()">CLEAR CURRENT TAB</button>
+    </div>
+</div>
+
+<div class="screen hidden" id="historyPage">
+    <div class="card">
+        <h3>Winning Tracker</h3>
+        <textarea id="winningPaste" placeholder="Paste winning list here..." style="height:100px;"></textarea>
+        <button style="background:var(--secondary);" onclick="checkWinners()">CHECK WINNINGS</button>
+        <div id="winDisplay" class="hidden">
+            <div id="winContent" style="background:var(--win-bg); padding:10px; border-radius:8px; margin-top:10px; white-space: pre-wrap; font-family: monospace;"></div>
+            <div class="total-section"><span>TOTAL WIN</span><span id="totalWinAmount">0</span></div>
+            <div class="row">
+                <button style="background:#25D366; flex:1;" onclick="shareWinningList()">SHARE</button>
+                <button style="background:#0288d1; flex:1;" onclick="copyWinningList()">COPY</button>
+            </div>
+        </div>
+        <hr>
+        <div class="row">
+            <button onclick="renderSaved(true)" style="background:#673AB7; flex:2;">MERGE & SORT</button>
+            <button id="btn-share-merged" onclick="shareMergedData()" style="background:#25D366; flex:1;">SHARE ALL</button>
+        </div>
+        <div class="list" id="savedList"></div>
+        <button onclick="backToMain()">BACK</button>
+        <button style="background:var(--danger);" onclick="clearAllHistory()">CLEAR ALL HISTORY</button>
+    </div>
+</div>
+
+<div id="customKeypad" class="fixed-keypad">
+    <div class="keypad-row"><button onclick="pressKey(1)">1</button><button onclick="pressKey(2)">2</button><button onclick="pressKey(3)">3</button></div>
+    <div class="keypad-row"><button onclick="pressKey(4)">4</button><button onclick="pressKey(5)">5</button><button onclick="pressKey(6)">6</button></div>
+    <div class="keypad-row"><button onclick="pressKey(7)">7</button><button onclick="pressKey(8)">8</button><button onclick="pressKey(9)">9</button></div>
+    <div class="keypad-row"><button style="background:var(--danger);" onclick="pressKey('DEL')">DEL</button><button onclick="pressKey(0)">0</button><button style="background:var(--secondary);" onclick="handleEnterKey()">ENT</button></div>
+</div>
+
+<script>
+    let customers = JSON.parse(localStorage.getItem("lottery_customers")) || [{name: "", temp: []}];
+    let activeIndex = 0;
+    let permanent = JSON.parse(localStorage.getItem("perm_list")) || [];
+    let layoutMode = false;
+    let lastDeletedData = null;
+    let currentInputId = 'num';
+    let lastWinDetails = "";
+
+    const firebaseConfig = { databaseURL: "https://surajlott-4a0b6-default-rtdb.firebaseio.com/" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function setFocus(id, e) {
+        if(e) e.stopPropagation();
+        currentInputId = id;
+        document.querySelectorAll('input').forEach(el => el.classList.remove('input-focus'));
+        document.getElementById(id).classList.add('input-focus');
+        document.getElementById('customKeypad').classList.add('keypad-show');
+        document.body.style.paddingBottom = "280px";
+    }
+    function hideKeypad() {
+        document.getElementById('customKeypad').classList.remove('keypad-show');
+        document.querySelectorAll('input').forEach(el => el.classList.remove('input-focus'));
+        document.body.style.paddingBottom = "50px";
+    }
+    function hideKeypadOnOutside(e) {
+        const kp = document.getElementById('customKeypad');
+        const isInput = e.target.tagName === 'INPUT';
+        if(!kp.contains(e.target) && !isInput) hideKeypad();
+    }
+    function handleEnterKey() {
+        if(currentInputId === 'num') setFocus('count');
+        else if(currentInputId === 'count') addEntry();
+        else if(currentInputId === 'stepStart') setFocus('stepEnd');
+        else if(currentInputId === 'stepEnd') setFocus('stepCount');
+        else if(currentInputId === 'stepCount') processStep();
+    }
+
+    function playEntrySound() {
+        if (!document.getElementById("soundToggle").checked) return;
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gn = audioCtx.createGain();
+            osc.connect(gn); gn.connect(audioCtx.destination);
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime); 
+            gn.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+        } catch(e) {}
+    }
+    function saveSoundPref() { localStorage.setItem("sound_enabled", document.getElementById("soundToggle").checked); }
+    function loadSoundPref() {
+        const s = localStorage.getItem("sound_enabled");
+        if (s !== null) document.getElementById("soundToggle").checked = (s === 'true');
+    }
+
+    function checkAutoLogin() {
+        const l = localStorage.getItem("login_time");
+        if(l && (new Date().getTime() - l < 12 * 60 * 60 * 1000)) showMain();
+    }
+    function checkLogin() {
+        const p = document.getElementById("loginPhone").value.trim();
+        db.ref('users/' + p).once('value').then((s) => {
+            if(s.val() && s.val().status === 'active') {
+                localStorage.setItem("login_time", new Date().getTime());
+                showMain();
+            } else alert("Denied!");
+        });
+    }
+    function showMain() { 
+        document.getElementById("loginOverlay").classList.add("hidden"); 
+        document.getElementById("mainPage").classList.remove("hidden"); 
+        initTabs(); 
+    }
+
+    function initTabs() {
+        let h = "";
+        customers.forEach((c, i) => h += `<div class="tab ${i === activeIndex ? 'active' : ''}" onclick="switchTab(${i})">${c.name || 'New'}</div>`);
+        h += `<div class="tab" onclick="addNewCustomer()" style="background:var(--secondary);">+</div>`;
+        document.getElementById("tabsList").innerHTML = h;
+        document.getElementById("customer").value = customers[activeIndex].name;
+        renderLive();
+    }
+    function switchTab(i) { activeIndex = i; initTabs(); }
+    function addNewCustomer() { customers.push({name: "", temp: []}); activeIndex = customers.length - 1; initTabs(); }
+    function updateTabName() { customers[activeIndex].name = document.getElementById("customer").value; localStorage.setItem("lottery_customers", JSON.stringify(customers)); initTabs(); }
+
+    function pressKey(k) {
+        let inp = document.getElementById(currentInputId);
+        if(k === 'DEL') inp.value = inp.value.slice(0,-1);
+        else {
+            inp.value += k;
+            if(currentInputId === 'num') {
+                let p = document.getElementById("posSelect").value;
+                let max = (p === "ABC") ? 3 : (p.length === 2 ? 2 : 1);
+                if(inp.value.length >= max) setFocus('count');
+            }
+        }
+        playEntrySound();
+    }
+
+    function addEntry() {
+        let n = document.getElementById("num").value, c = document.getElementById("count").value, p = document.getElementById("posSelect").value;
+        if(!n || !c) return;
+        customers[activeIndex].temp.push({p: p, n: n.padStart(p==='ABC'?3:p.length, '0'), c: parseInt(c)});
+        document.getElementById("num").value = ""; document.getElementById("count").value = "";
+        renderLive(); setFocus('num');
+    }
+
+    function addBoxEntry() {
+        let n = document.getElementById("num").value, c = document.getElementById("count").value;
+        if(!n || !c) return;
+        let s = n.padStart(3, '0').split(''), res = [];
+        for(let i=0;i<3;i++) for(let j=0;j<3;j++) for(let k=0;k<3;k++) if(i!==j && j!==k && i!==k) res.push(s[i]+s[j]+s[k]);
+        [...new Set(res)].forEach(bx => customers[activeIndex].temp.push({p: "ABC", n: bx, c: parseInt(c)}));
+        renderLive(); playEntrySound();
+    }
+
+    function renderLive() {
+        let h = ""; let t = 0;
+        let d = customers[activeIndex].temp || [];
+        d.slice().reverse().forEach((item, i) => {
+            let realIdx = d.length - 1 - i;
+            h += `<div class="item"><span>${item.p} ${item.n} -- ${item.c}</span><button class="del-btn" onclick="confirmDelete(${realIdx})"></button></div>`;
+            t += item.c;
+        });
+        document.getElementById("liveList").innerHTML = h || "<p style='text-align:center;'>No Data</p>";
+        document.getElementById("liveTotal").innerText = t;
+        localStorage.setItem("lottery_customers", JSON.stringify(customers));
+    }
+
+    function confirmDelete(idx) {
+        if(confirm("   ?")) {
+            customers[activeIndex].temp.splice(idx, 1);
+            renderLive();
+        }
+    }
+
+    function resetTab() { if(confirm("     ?")) { customers[activeIndex].temp = []; renderLive(); } }
+
+    function share() {
+        let d = [...customers[activeIndex].temp], n = document.getElementById("customer").value;
+        if(d.length === 0) return;
+        lastDeletedData = { name: n, temp: d, index: activeIndex };
+        document.getElementById("undoBtn").style.display = "block";
+        let txt = ` *${n || 'Customer'}*\n------------------\n`, t = 0;
+        d.forEach(i => { txt += `${i.p} ${i.n} - ${i.c}\n`; t += i.c; });
+        txt += `------------------\nTotal: ${t}`;
+        customers[activeIndex].temp = []; renderLive();
+        window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
+    }
+    function undoClear() { if(lastDeletedData) { customers[lastDeletedData.index].temp = lastDeletedData.temp; document.getElementById("undoBtn").style.display = "none"; renderLive(); } }
+
+    function toggleSmart(s) { document.getElementById("smartModal").classList.toggle("hidden", !s); }
+    function processSmartPaste() {
+        let text = document.getElementById("smartPaste").value;
+        let regex = /(?:^|[^\d])(\d{3})(?:[^\d]+)(\d+)(?=[^\d]|$)/g, m;
+        while ((m = regex.exec(text)) !== null) customers[activeIndex].temp.push({p: "ABC", n: m[1], c: parseInt(m[2])});
+        toggleSmart(false); renderLive();
+    }
+
+    function saveDay() { if(customers[activeIndex].temp.length > 0) { permanent = [...permanent, ...customers[activeIndex].temp]; localStorage.setItem("perm_list", JSON.stringify(permanent)); alert("History Saved!"); } }
+    function openHistory() { document.getElementById("mainPage").classList.add("hidden"); document.getElementById("historyPage").classList.remove("hidden"); hideKeypad(); renderSaved(); }
+    function backToMain() { document.getElementById("historyPage").classList.add("hidden"); document.getElementById("mainPage").classList.remove("hidden"); }
+
+    function renderSaved(m = false) {
+        let h = ""; let t = 0; let list = [...permanent];
+        if(m) {
+            let dict = {};
+            list.forEach(i => { let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; });
+            list = Object.values(dict).sort((a,b)=>a.n.localeCompare(b.n));
+        }
+        list.slice().reverse().forEach(i => { h += `<div class="item"><span>${i.p} ${i.n} -- ${i.c}</span></div>`; t += i.c; });
+        document.getElementById("savedList").innerHTML = h;
+    }
+
+    function shareMergedData() {
+        if(permanent.length === 0) return;
+        let min = prompt("     ?", "1");
+        if(min === null) return;
+        min = parseInt(min) || 0;
+        let dict = {};
+        permanent.forEach(i => { let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; });
+        let list = Object.values(dict).sort((a,b)=>a.n.localeCompare(b.n));
+        let txt = ` *MERGED LIST (Min: ${min})*\n------------------\n`;
+        let count = 0;
+        list.forEach(i => { if(i.c >= min) { txt += `${i.p} ${i.n} - ${i.c}\n`; count++; } });
+        if(count === 0) { alert("   !"); return; }
+        window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
+    }
+
+    function checkWinners() {
+        let winText = document.getElementById("winningPaste").value;
+        if(!winText || permanent.length === 0) return;
+        
+        //     3   
+        let found = winText.match(/\d{3}/g);
+        if(!found) return;
+
+        //        
+        //          
+        let numberPrizeMap = {};
+
+        found.forEach((num, i) => {
+            let currentPrize = 0;
+            if(i === 0) currentPrize = 5400;      // 1st Prize
+            else if(i === 1) currentPrize = 550;  // 2nd Prize
+            else if(i === 2) currentPrize = 270;  // 3rd Prize
+            else if(i === 3) currentPrize = 120;  // 4th Prize
+            else if(i === 4) currentPrize = 80;   // 5th Prize
+            else currentPrize = 35;               // Remaining
+
+            //         (Eg: 5400 + 80)
+            numberPrizeMap[num] = (numberPrizeMap[num] || 0) + currentPrize;
+        });
+
+        let first = found[0]; 
+        let wA = first[0], wB = first[1], wC = first[2];
+        
+        let mergedEntries = {};
+        permanent.forEach(item => { 
+            let key = item.p + "-" + item.n; 
+            mergedEntries[key] = (mergedEntries[key] || 0) + item.c; 
+        });
+        
+        let reportLines = []; 
+        let grandTotal = 0;
+
+        Object.keys(mergedEntries).forEach(key => {
+            let [pos, num] = key.split("-");
+            let count = mergedEntries[key];
+            let totalUnitPrize = 0;
+
+            // 1. ABC   (   map-   )
+            if(pos === "ABC" && numberPrizeMap[num]) {
+                totalUnitPrize += numberPrizeMap[num];
+            }
+            
+            // 2.    (A, B, C) - 80  
+            if(pos === "A" && num === wA) totalUnitPrize += 80;
+            if(pos === "B" && num === wB) totalUnitPrize += 80;
+            if(pos === "C" && num === wC) totalUnitPrize += 80;
+
+            if(totalUnitPrize > 0) {
+                let lineTotal = count * totalUnitPrize;
+                reportLines.push(`${pos} ${num}: ${count} * ${totalUnitPrize} = ${lineTotal}`);
+                grandTotal += lineTotal;
+            }
+        });
+
+        if(reportLines.length > 0) {
+            lastWinDetails = ` WIN REPORT \n1st: ${first}\n------------------\n${reportLines.join("\n")}\n------------------\nTOTAL: ${grandTotal}`;
+            document.getElementById("winDisplay").classList.remove("hidden");
+            document.getElementById("winContent").innerText = reportLines.join("\n");
+            document.getElementById("totalWinAmount").innerText = "" + grandTotal;
+        } else {
+            alert("No Winners Found");
+            document.getElementById("winDisplay").classList.add("hidden");
+        }
+    }
+
+    function shareWinningList() { if(lastWinDetails) window.location.href = "whatsapp://send?text=" + encodeURIComponent(lastWinDetails); }
+    function copyWinningList() { if(!lastWinDetails) return; navigator.clipboard.writeText(lastWinDetails).then(() => { alert("Winning Report Copied!"); }); }
+    function clearAllHistory() { if(confirm("    ?")) { permanent=[]; localStorage.setItem("perm_list", "[]"); renderSaved(); } }
+    function toggleStep(s) { document.getElementById("normalEntry").classList.toggle("hidden", s); document.getElementById("stepEntry").classList.toggle("hidden", !s); }
+    function processStep() {
+        let s = parseInt(document.getElementById("stepStart").value), e = parseInt(document.getElementById("stepEnd").value), c = parseInt(document.getElementById("stepCount").value), p = document.getElementById("posSelect").value, g = parseInt(document.getElementById("stepGap").value) || 1;
+        for(let i=s; i<=e; i+=g) customers[activeIndex].temp.push({p:p, n:i.toString().padStart(p==='ABC'?3:p.length,'0'), c:c});
+        toggleStep(false); renderLive(); playEntrySound();
+    }
+    function openSettings() { document.getElementById("settingsModal").classList.remove("hidden"); }
+    function changeBtnSize(v) { document.documentElement.style.setProperty('--btn-pad', v + 'px'); }
+    function toggleLayoutMode() {
+        layoutMode = !layoutMode;
+        document.getElementById("layoutModeBtn").innerText = layoutMode ? "Disable Move Mode" : "Enable Move Mode";
+        document.getElementById("layoutModeBtn").style.background = layoutMode ? "red" : "#444";
+        ['btn-share', 'btn-smart', 'btn-add', 'btn-box', 'btn-step', 'btn-save', 'btn-history', 'btn-clear'].forEach(id => {
+            let el = document.getElementById(id);
+            if(layoutMode) { el.classList.add('draggable'); makeDraggable(el); }
+            else { el.classList.remove('draggable'); el.style.position = ""; el.onmousedown = null; el.ontouchstart = null; }
+        });
+    }
+    function makeDraggable(el) {
+        let p1=0; let p2=0; let p3=0; let p4=0; el.onmousedown = dS; el.ontouchstart = dS;
+        function dS(e) { e.preventDefault(); p3 = e.clientX || e.touches[0].clientX; p4 = e.clientY || e.touches[0].clientY; document.onmouseup = dE; document.ontouchend = dE; document.onmousemove = dM; document.ontouchmove = dM; }
+        function dM(e) { e.preventDefault(); let x = e.clientX || e.touches[0].clientX; let y = e.clientY || e.touches[0].clientY; p1=p3-x; p2=p4-y; p3=x; p4=y; el.style.top = (el.offsetTop-p2)+"px"; el.style.left = (el.offsetLeft-p1)+"px"; el.style.position = "absolute"; }
+        function dE() { document.onmouseup = null; document.onmousemove = null; document.ontouchend = null; document.ontouchmove = null; }
+    }
+    function saveCustomStyles() {
+        let s = { pad: getComputedStyle(document.documentElement).getPropertyValue('--btn-pad'), pos: {} };
+        ['btn-share', 'btn-smart', 'btn-add', 'btn-box', 'btn-step', 'btn-save', 'btn-history', 'btn-clear'].forEach(id => {
+            let el = document.getElementById(id);
+            s.pos[id] = { t: el.style.top, l: el.style.left, p: el.style.position };
+        });
+        localStorage.setItem("user_ui_v2", JSON.stringify(s));
+        document.getElementById("settingsModal").classList.add("hidden");
+        if(layoutMode) toggleLayoutMode();
+    }
+    function loadCustomStyles() {
+        let s = JSON.parse(localStorage.getItem("user_ui_v2"));
+        if(s) {
+            document.documentElement.style.setProperty('--btn-pad', s.pad);
+            for(let id in s.pos) {
+                let el = document.getElementById(id);
+                if(el) { el.style.top = s.pos[id].t; el.style.left = s.pos[id].l; el.style.position = s.pos[id].p; }
+            }
+        }
+    }
+    function resetStyles() { localStorage.removeItem("user_ui_v2"); location.reload(); }
+</script>
+</body>
+</html>
