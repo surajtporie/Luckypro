@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Lottery Pro Max - Final Optimized</title>
+<title>Lottery Pro Max - Share Optimized</title>
 
 <style>
     :root {
@@ -28,7 +28,6 @@
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
     .brand { font-size: 20px; font-weight: 800; background: linear-gradient(45deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     
-    /* Undo Mini Button */
     .undo-mini { 
         background: #ff9800; color: black; 
         width: 32px; height: 32px; 
@@ -326,22 +325,33 @@
         document.getElementById("liveTotal").innerText = t;
     }
 
+    // പബ്ലിക് ഷെയർ ഫംഗ്ഷൻ - നിലവിൽ സ്ക്രീനിൽ കാണുന്ന ക്രമം ഉപയോഗിക്കുന്നു
     function share() {
-        let d = [...customers[activeIndex].temp];
+        let d = [...customers[activeIndex].temp]; // സ്ക്രീനിലുള്ള ലിസ്റ്റ് അതേപോലെ എടുക്കുന്നു
         let n = document.getElementById("customer").value || "Customer";
         if(d.length === 0) return;
+
+        // അബദ്ധത്തിൽ ക്ലിയർ ആയാൽ തിരികെ എടുക്കാൻ ബാക്കപ്പ്
         lastDeletedData = { name: n, temp: [...d], index: activeIndex, lastCount: document.getElementById("count").value };
         document.getElementById("undoMini").style.display = "flex"; 
-        d.sort((a,b) => a.time - b.time);
+
+        // വാട്സാപ്പ് മെസ്സേജ് നിർമ്മാണം
         let txt = `💎 *${n}*\n━━━━━━━━━━━\n`;
         let t = 0;
-        d.forEach(i => { txt += `▫️ ${i.p} ${i.n} : ${i.c}\n`; t += i.c; });
+        d.forEach(i => { 
+            txt += `▫️ ${i.p} ${i.n} : ${i.c}\n`; 
+            t += i.c; 
+        });
         txt += `━━━━━━━━━━━\n✅ *Total: ${t}*`;
+        
+        // ഷെയർ ചെയ്ത ശേഷം നിലവിലുള്ള ടാബ് ക്ലിയർ ചെയ്യുന്നു
         customers[activeIndex].temp = []; 
         customers[activeIndex].name = "";
         document.getElementById("customer").value = "";
         document.getElementById("count").value = ""; 
-        renderTabs(); save();
+
+        renderTabs(); 
+        save();
         window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
     }
 
@@ -355,7 +365,6 @@
         }
     }
 
-    /* DELETE CONFIRMATION ADDED HERE */
     function delItem(i) { 
         if(confirm("ഈ എൻട്രി ഡിലീറ്റ് ചെയ്യണോ?")) {
             customers[activeIndex].temp.splice(i, 1); 
@@ -364,7 +373,10 @@
         }
     }
 
-    function sortCurrentList() { customers[activeIndex].temp.sort((a,b) => b.c - a.c); renderLive(); }
+    function sortCurrentList() { 
+        customers[activeIndex].temp.sort((a,b) => b.c - a.c); 
+        renderLive(); 
+    }
     
     function resetTab() { 
         if(confirm("ഈ ടാബിലെ എല്ലാ ഡാറ്റയും ക്ലിയർ ചെയ്യണോ?")) { 
@@ -442,9 +454,7 @@
     function save() { localStorage.setItem("lottery_customers", JSON.stringify(customers)); }
     function loadSettings() { document.getElementById("mergeToggle").checked = localStorage.getItem("merge") === 'true'; document.getElementById("soundToggle").checked = localStorage.getItem("sound") !== 'false'; }
     function saveSettings() { localStorage.setItem("merge", document.getElementById("mergeToggle").checked); localStorage.setItem("sound", document.getElementById("soundToggle").checked); closeModals(); }
-    
     function playSnd() { if(document.getElementById("soundToggle").checked) { let a = new AudioContext(); let o = a.createOscillator(); let g = a.createGain(); o.connect(g); g.connect(a.destination); o.frequency.value = 850; g.gain.value = 0.05; o.start(); o.stop(a.currentTime + 0.08); } }
-    
     function toggleStep(s) { document.getElementById("stepEntry").classList.toggle("hidden", !s); if(s) setFocus('stepStart', {stopPropagation:()=>{}}); }
     
     function processStep() {
