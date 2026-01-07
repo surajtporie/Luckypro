@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Lottery Pro Max - Share Optimized</title>
+<title>Lottery Pro Max - Multi Prize Fixed</title>
 
 <style>
     :root {
@@ -133,7 +133,7 @@
         </div>
     </div>
 
-    <div id="stepEntry" class="input-group hidden" style="border-color: var(--primary);">
+    <div id="stepEntry" class="input-group hidden">
         <div style="display:flex; gap:8px;">
             <input id="stepStart" placeholder="Start" readonly onclick="setFocus('stepStart', event)">
             <input id="stepEnd" placeholder="End" readonly onclick="setFocus('stepEnd', event)">
@@ -269,7 +269,6 @@
         if(isNewInput && k !== 'DEL') { el.value = ""; isNewInput = false; }
         if(k === 'DEL') el.value = el.value.slice(0, -1);
         else el.value += k;
-
         if(currentInputId === 'num') {
             let p = document.getElementById("posSelect").value;
             let max = (p === 'ABC') ? 3 : (p.length === 2 ? 2 : 1);
@@ -287,14 +286,12 @@
         let n = document.getElementById("num").value, c = parseInt(document.getElementById("count").value), p = document.getElementById("posSelect").value;
         if(!n || isNaN(c)) return;
         n = n.padStart(p==='ABC'?3:p.length, '0');
-
         let merged = false;
         if(document.getElementById("mergeToggle").checked) {
             let idx = customers[activeIndex].temp.findIndex(i => i.p === p && i.n === n);
             if(idx > -1) { customers[activeIndex].temp[idx].c += c; merged = true; }
         }
         if(!merged) customers[activeIndex].temp.unshift({p, n, c, time: Date.now()});
-
         document.getElementById("num").value = ""; 
         setFocus('num', {stopPropagation:()=>{}}); 
         renderLive(); save();
@@ -325,33 +322,21 @@
         document.getElementById("liveTotal").innerText = t;
     }
 
-    // പബ്ലിക് ഷെയർ ഫംഗ്ഷൻ - നിലവിൽ സ്ക്രീനിൽ കാണുന്ന ക്രമം ഉപയോഗിക്കുന്നു
     function share() {
-        let d = [...customers[activeIndex].temp]; // സ്ക്രീനിലുള്ള ലിസ്റ്റ് അതേപോലെ എടുക്കുന്നു
+        let d = [...customers[activeIndex].temp];
         let n = document.getElementById("customer").value || "Customer";
         if(d.length === 0) return;
-
-        // അബദ്ധത്തിൽ ക്ലിയർ ആയാൽ തിരികെ എടുക്കാൻ ബാക്കപ്പ്
         lastDeletedData = { name: n, temp: [...d], index: activeIndex, lastCount: document.getElementById("count").value };
         document.getElementById("undoMini").style.display = "flex"; 
-
-        // വാട്സാപ്പ് മെസ്സേജ് നിർമ്മാണം
         let txt = `💎 *${n}*\n━━━━━━━━━━━\n`;
         let t = 0;
-        d.forEach(i => { 
-            txt += `▫️ ${i.p} ${i.n} : ${i.c}\n`; 
-            t += i.c; 
-        });
+        d.forEach(i => { txt += `▫️ ${i.p} ${i.n} : ${i.c}\n`; t += i.c; });
         txt += `━━━━━━━━━━━\n✅ *Total: ${t}*`;
-        
-        // ഷെയർ ചെയ്ത ശേഷം നിലവിലുള്ള ടാബ് ക്ലിയർ ചെയ്യുന്നു
         customers[activeIndex].temp = []; 
         customers[activeIndex].name = "";
         document.getElementById("customer").value = "";
         document.getElementById("count").value = ""; 
-
-        renderTabs(); 
-        save();
+        renderTabs(); save();
         window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
     }
 
@@ -365,49 +350,49 @@
         }
     }
 
-    function delItem(i) { 
-        if(confirm("ഈ എൻട്രി ഡിലീറ്റ് ചെയ്യണോ?")) {
-            customers[activeIndex].temp.splice(i, 1); 
-            renderLive(); 
-            save(); 
-        }
-    }
-
-    function sortCurrentList() { 
-        customers[activeIndex].temp.sort((a,b) => b.c - a.c); 
-        renderLive(); 
-    }
-    
-    function resetTab() { 
-        if(confirm("ഈ ടാബിലെ എല്ലാ ഡാറ്റയും ക്ലിയർ ചെയ്യണോ?")) { 
-            customers[activeIndex].temp = []; 
-            customers[activeIndex].name = ""; 
-            document.getElementById("customer").value = ""; 
-            document.getElementById("count").value = ""; 
-            renderTabs(); 
-            save(); 
-        } 
-    }
-
+    function delItem(i) { if(confirm("ഡിലീറ്റ് ചെയ്യണോ?")) { customers[activeIndex].temp.splice(i, 1); renderLive(); save(); } }
+    function sortCurrentList() { customers[activeIndex].temp.sort((a,b) => b.c - a.c); renderLive(); }
+    function resetTab() { if(confirm("ടാബ് ക്ലിയർ ചെയ്യണോ?")) { customers[activeIndex].temp = []; customers[activeIndex].name = ""; document.getElementById("customer").value = ""; renderTabs(); save(); } }
     function saveDay() { if(customers[activeIndex].temp.length > 0) { permanent = [...permanent, ...customers[activeIndex].temp]; localStorage.setItem("perm_list", JSON.stringify(permanent)); alert("History Saved!"); } }
-    
+
     function checkWinners() {
         let winText = document.getElementById("winningPaste").value;
         let found = winText.match(/\d{3}/g);
         if(!found) return;
+        
         let first = found[0], wA = first[0], wB = first[1], wC = first[2];
         let rep = [], total = 0;
+        
         permanent.forEach(i => {
-            let prize = 0; let pName = "";
+            let itemTotalPrize = 0;
+            let itemPrizeNames = [];
+
             if(i.p === "ABC") {
-                if(i.n === first) { prize = 5400; pName = "(1st)"; }
-                else if(found.slice(1,5).includes(i.n)) { prize = 550; pName = "(2nd-5th)"; }
-                else if(found.includes(i.n)) { prize = 35; pName = "(6th+)"; }
-            } else if(i.p === "A" && i.n === wA) prize = 80;
-            else if(i.p === "B" && i.n === wB) prize = 80;
-            else if(i.p === "C" && i.n === wC) prize = 80;
-            if(prize > 0) { rep.push(`💠 ${i.n} ${pName} » ${i.c} × ${prize} = ${i.c * prize}`); total += i.c * prize; }
+                // ഒന്നിലധികം സ്ഥാനങ്ങളിൽ ഒരേ നമ്പർ വന്നാലും എല്ലാം കിട്ടും
+                if(i.n === found[0]) { itemTotalPrize += 5400; itemPrizeNames.push("1st"); }
+                if(i.n === found[1]) { itemTotalPrize += 550; itemPrizeNames.push("2nd"); }
+                if(i.n === found[2]) { itemTotalPrize += 270; itemPrizeNames.push("3rd"); }
+                if(i.n === found[3]) { itemTotalPrize += 120; itemPrizeNames.push("4th"); }
+                if(i.n === found[4]) { itemTotalPrize += 80; itemPrizeNames.push("5th"); }
+                
+                // 6-ാം സമ്മാനത്തിന് അർഹമാണോ എന്ന് പരിശോധിക്കുന്നു (നേരത്തെ കിട്ടിയവ ഒഴിവാക്കി)
+                let isSixth = false;
+                for(let idx=5; idx<found.length; idx++) {
+                    if(i.n === found[idx]) { isSixth = true; break; }
+                }
+                if(isSixth) { itemTotalPrize += 35; itemPrizeNames.push("6th+"); }
+                
+            } else if(i.p === "A" && i.n === wA) { itemTotalPrize += 80; itemPrizeNames.push("A"); }
+            else if(i.p === "B" && i.n === wB) { itemTotalPrize += 80; itemPrizeNames.push("B"); }
+            else if(i.p === "C" && i.n === wC) { itemTotalPrize += 80; itemPrizeNames.push("C"); }
+            
+            if(itemTotalPrize > 0) {
+                let pLabel = "(" + itemPrizeNames.join("+") + ")";
+                rep.push(`💠 ${i.n} ${pLabel} » ${i.c} × ${itemTotalPrize} = ${i.c * itemTotalPrize}`);
+                total += i.c * itemTotalPrize;
+            }
         });
+        
         document.getElementById("winDisplay").classList.remove("hidden");
         document.getElementById("winContent").innerText = rep.join("\n") || "No Winners";
         document.getElementById("totalWinAmount").innerText = "₹" + total;
@@ -430,27 +415,29 @@
     
     function renderSaved(m = false) {
         let list = [...permanent];
-        if(m) { let dict = {}; list.forEach(i => { let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; }); list = Object.values(dict).sort((a,b) => b.c - a.c); }
-        let h = ""; list.slice().reverse().forEach(i => h += `<div class="list-item"><span>${i.p} ${i.n}</span> <b>${i.c}</b></div>`);
+        if(m) { 
+            let dict = {}; 
+            list.forEach(i => { 
+                let k=i.p+"-"+i.n; 
+                dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); 
+                dict[k].c += i.c; 
+            }); 
+            list = Object.values(dict).sort((a,b) => b.c - a.c); 
+        } else {
+            list = list.slice().reverse();
+        }
+        let h = ""; list.forEach(i => h += `<div class="list-item"><span>${i.p} ${i.n}</span> <b>${i.c}</b></div>`);
         document.getElementById("savedList").innerHTML = h;
     }
 
     function shareMergedData() {
         let dict = {}; permanent.forEach(i => { let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; });
         let txt = `📑 *MERGED LIST*\n━━━━━━━━━━━\n`;
-        Object.values(dict).sort((a,b)=>a.n.localeCompare(b.n)).forEach(i => txt += `▫️ ${i.p} ${i.n} : ${i.c}\n`);
+        Object.values(dict).sort((a,b)=> b.c - a.c).forEach(i => txt += `▫️ ${i.p} ${i.n} : ${i.c}\n`);
         window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
     }
 
-    function clearAllHistory() { 
-        if(confirm("ഹിസ്റ്ററി മുഴുവൻ ഡിലീറ്റ് ചെയ്യണോ?")) { 
-            permanent = []; 
-            localStorage.setItem("perm_list", "[]"); 
-            document.getElementById("winDisplay").classList.add("hidden");
-            renderSaved(); 
-        } 
-    }
-
+    function clearAllHistory() { if(confirm("ക്ലിയർ ഹിസ്റ്ററി?")) { permanent = []; localStorage.setItem("perm_list", "[]"); renderSaved(); } }
     function save() { localStorage.setItem("lottery_customers", JSON.stringify(customers)); }
     function loadSettings() { document.getElementById("mergeToggle").checked = localStorage.getItem("merge") === 'true'; document.getElementById("soundToggle").checked = localStorage.getItem("sound") !== 'false'; }
     function saveSettings() { localStorage.setItem("merge", document.getElementById("mergeToggle").checked); localStorage.setItem("sound", document.getElementById("soundToggle").checked); closeModals(); }
