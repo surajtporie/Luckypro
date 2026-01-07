@@ -3,312 +3,275 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="theme-color" content="#000000">
-
-<link rel="manifest" href="manifest.json">
-<title>Lottery Pro Max - Premium Edition</title>
+<title>Lottery Pro Max - Pro UI</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
-    :root { --bg: #121212; --card-bg: #1e1e1e; --text: #e0e0e0; --primary: #7b1fa2; --secondary: #00c853; --danger: #d32f2f; --border: #333; --win-bg: #1b5e20; --btn-pad: 12px; }
-    body { margin: 0; font-family: sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 10px; padding-bottom: 50px; overflow-x: hidden; transition: padding 0.3s; }
-    .card { width: 100%; max-width: 450px; background: var(--card-bg); border-radius: 15px; padding: 15px; box-sizing: border-box; position: relative; min-height: 500px; }
-    input, button, textarea, select { width: 100%; padding: var(--btn-pad); margin: 5px 0; font-size: 16px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; background: #2c2c2c; color: white; outline: none; }
-    .row { display: flex; gap: 5px; align-items: center; }
+    :root {
+        --primary: #bb86fc;
+        --secondary: #03dac6;
+        --bg: #0f0f12;
+        --card: #1e1e26;
+        --text: #ffffff;
+        --text-dim: #b0b0b0;
+        --danger: #cf6679;
+        --glass: rgba(255, 255, 255, 0.05);
+    }
+
+    body {
+        margin: 0; font-family: 'Segoe UI', sans-serif;
+        background-color: var(--bg); color: var(--text);
+        display: flex; justify-content: center; min-height: 100vh;
+    }
+
+    .app-container { width: 100%; max-width: 480px; padding: 15px; box-sizing: border-box; }
+
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .brand { font-size: 22px; font-weight: 800; background: linear-gradient(45deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     
-    .custom-btn { font-weight: bold; cursor: pointer; border: none; text-transform: uppercase; transition: 0.3s; touch-action: none; position: relative; }
-    .draggable { border: 2px dashed #ffff00 !important; z-index: 1000 !important; }
+    .stats-bar {
+        background: var(--card); border-radius: 20px; padding: 15px; margin-bottom: 15px;
+        display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--glass);
+    }
+    .stat-item span { display: block; color: var(--text-dim); font-size: 11px; text-transform: uppercase; }
+    .stat-item b { font-size: 20px; color: var(--secondary); }
 
-    .tabs { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 5px; }
-    .tab { padding: 8px 15px; background: #333; border-radius: 20px; font-size: 12px; cursor: pointer; white-space: nowrap; }
-    .tab.active { background: var(--primary); color: white; border: 1px solid #fff; }
+    .action-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
+    .action-btn { background: var(--glass); border: 1px solid var(--glass); color: white; padding: 8px; border-radius: 12px; font-size: 11px; cursor: pointer; text-align: center; }
 
-    .list { margin-top: 10px; max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; background: #181818; }
-    .item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border); transition: background 0.5s; }
-    .merged-highlight { background: #2e7d32 !important; }
+    .input-group { background: var(--card); border-radius: 20px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--glass); }
+    input, select, textarea {
+        background: rgba(255,255,255,0.07); border: 1px solid transparent; border-radius: 12px;
+        padding: 12px; color: white; font-size: 16px; width: 100%; box-sizing: border-box; margin: 5px 0;
+    }
+    .input-focus { border-color: var(--primary) !important; background: rgba(255,255,255,0.1) !important; outline: none; box-shadow: 0 0 8px var(--primary); }
 
-    .total-section { display: flex; justify-content: space-between; padding: 10px; background: #333; border-radius: 8px; margin-top: 10px; font-weight: bold; border: 1px solid var(--secondary); color: var(--secondary); font-size: 18px; }
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+    button { border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    button:active { transform: scale(0.95); }
+    .btn-p { background: var(--primary); color: #000; padding: 12px; }
+    .btn-s { background: var(--secondary); color: #000; padding: 12px; }
+    .btn-o { background: #f57c00; color: white; padding: 12px; }
+    .btn-blue { background: #0288d1; color: white; padding: 12px; }
+
+    .tabs-wrapper { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
+    .tab { background: var(--card); padding: 8px 16px; border-radius: 15px; white-space: nowrap; font-size: 13px; border: 1px solid var(--glass); }
+    .tab.active { background: var(--primary); color: black; font-weight: bold; }
+
+    .data-list { background: var(--card); border-radius: 20px; max-height: 300px; overflow-y: auto; border: 1px solid var(--glass); }
+    .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--glass); }
+    .list-item b { color: var(--primary); font-size: 18px; }
+
+    .keypad {
+        position: fixed; bottom: -400px; left: 0; width: 100%; background: #181820; padding: 15px;
+        border-radius: 30px 30px 0 0; z-index: 3000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.5); box-sizing: border-box;
+    }
+    .keypad-show { bottom: 0; }
+    .k-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+    .k-btn { background: #2a2a35; height: 50px; border-radius: 12px; font-size: 20px; color: white; }
+
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 4000; backdrop-filter: blur(5px); padding: 15px; }
+    .modal { background: var(--card); width: 100%; max-width: 400px; padding: 20px; border-radius: 25px; border: 1px solid var(--glass); max-height: 90vh; overflow-y: auto; }
     
     .hidden { display: none !important; }
+    .flex { display: flex !important; }
 
-    .toggle-row { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; padding: 5px; background: #2c2c2c; border-radius: 8px; }
-    .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .4s; border-radius: 20px; }
-    .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-    input:checked + .slider { background-color: var(--secondary); }
-    input:checked + .slider:before { transform: translateX(20px); }
-
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; }
-    .modal-content { background: var(--card-bg); width: 100%; max-width: 400px; padding: 20px; border-radius: 15px; border: 1px solid var(--primary); overflow-y: auto; max-height: 90vh; }
-    
-    .fixed-keypad { position: fixed; bottom: -350px; left: 0; width: 100%; background: #1a1a1a; padding: 10px; box-sizing: border-box; border-top: 2px solid var(--primary); z-index: 3000; transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-    .keypad-show { bottom: 0; }
-    .keypad-row { display: flex; gap: 5px; margin-bottom: 5px; }
-    .keypad-row button { flex: 1; height: 50px; font-size: 22px; background: #333; color: white; border-radius: 8px; border: none; }
-    .input-focus { border: 2px solid var(--secondary) !important; background: #3d3d3d !important; }
-
-    .del-btn { background: none; border: none; color: var(--danger); font-size: 18px; cursor: pointer; padding: 5px 10px; }
+    .history-footer { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-back { background: #444; color: white; padding: 12px; }
+    .btn-clear-all { background: var(--danger); color: white; padding: 12px; }
 </style>
 </head>
-<body onclick="hideKeypadOnOutside(event)" onload="checkAutoLogin(); loadCustomStyles(); loadSettings();">
+<body onclick="hideKeypadOnOutside(event)" onload="initApp()">
 
-<div id="loginOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#121212; z-index:9999; display:flex; justify-content:center; align-items:center;">
-    <div class="card" style="max-width:320px; text-align:center; min-height: auto;">
-        <h2 style="color:var(--primary);">Lottery Pro</h2>
-        <input id="loginPhone" type="tel" placeholder="Mobile Number" style="text-align:center;">
-        <button style="background:var(--primary); color:white;" onclick="checkLogin()">UNLOCK</button>
+<div class="app-container">
+    <div class="header">
+        <div class="brand">LOTTERY PRO MAX</div>
+        <button onclick="toggleModal('settingsModal')" style="background:none; font-size:22px;">⚙️</button>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat-item"><span>Total Count</span><b id="liveTotal">0</b></div>
+        <div style="display: flex; gap: 8px;">
+            <button class="btn-s" onclick="share()" style="padding: 8px 15px; font-size: 12px;">SHARE</button>
+            <button class="btn-p" onclick="openHistory()" style="padding: 8px 15px; font-size: 12px;">HISTORY</button>
+        </div>
+    </div>
+
+    <div class="action-row">
+        <div class="action-btn" onclick="toggleModal('smartModal')">🚀 SMART</div>
+        <div class="action-btn" onclick="sortCurrentList()">📊 SORT</div>
+        <div class="action-btn" onclick="saveDay()">💾 SAVE</div>
+        <div class="action-btn" onclick="resetTab()" style="color:var(--danger)">🗑️ CLEAR</div>
+    </div>
+
+    <div class="tabs-wrapper" id="tabsList"></div>
+
+    <div class="input-group">
+        <input id="customer" placeholder="Customer Name" oninput="updateTabName()">
+        <div style="display: flex; gap: 8px;">
+            <select id="posSelect" style="flex: 1; background: #37474f;">
+                <option value="ABC">ABC</option>
+                <option value="A">A</option><option value="B">B</option><option value="C">C</option>
+                <option value="AB">AB</option><option value="BC">BC</option><option value="AC">AC</option>
+            </select>
+            <input id="num" placeholder="No" readonly onclick="setFocus('num', event)" style="flex: 1.5;">
+            <input id="count" placeholder="Count" readonly onclick="setFocus('count', event)" style="flex: 1.5;">
+        </div>
+        <div class="btn-row">
+            <button class="btn-p" onclick="addEntry()">ADD</button>
+            <button class="btn-o" onclick="addBoxEntry()">BOX</button>
+            <button class="btn-blue" onclick="toggleStep(true)">STEP</button>
+        </div>
+    </div>
+
+    <div id="stepEntry" class="input-group hidden" style="border-color: var(--primary);">
+        <div style="display:flex; gap:8px;">
+            <input id="stepStart" placeholder="Start" readonly onclick="setFocus('stepStart', event)">
+            <input id="stepEnd" placeholder="End" readonly onclick="setFocus('stepEnd', event)">
+        </div>
+        <div style="display:flex; gap:8px;">
+            <input id="stepGap" placeholder="Gap" value="1" readonly onclick="setFocus('stepGap', event)">
+            <input id="stepCount" placeholder="Count" readonly onclick="setFocus('stepCount', event)">
+        </div>
+        <div class="btn-row" style="grid-template-columns: 1fr 1fr;">
+            <button class="btn-s" onclick="processStep()">PROCESS STEP</button>
+            <button class="btn-d" onclick="toggleStep(false)" style="background:var(--danger); color:white;">CANCEL</button>
+        </div>
+    </div>
+
+    <button id="undoBtn" class="hidden" style="width:100%; background: #ff9800; color: white; padding: 10px; margin-bottom:10px;" onclick="undoClear()">↩️ UNDO LAST SHARE</button>
+
+    <div class="data-list" id="liveList"></div>
+</div>
+
+<div id="customKeypad" class="keypad">
+    <div class="k-row">
+        <button class="k-btn" onclick="press('1')">1</button>
+        <button class="k-btn" onclick="press('2')">2</button>
+        <button class="k-btn" onclick="press('3')">3</button>
+    </div>
+    <div class="k-row">
+        <button class="k-btn" onclick="press('4')">4</button>
+        <button class="k-btn" onclick="press('5')">5</button>
+        <button class="k-btn" onclick="press('6')">6</button>
+    </div>
+    <div class="k-row">
+        <button class="k-btn" onclick="press('7')">7</button>
+        <button class="k-btn" onclick="press('8')">8</button>
+        <button class="k-btn" onclick="press('9')">9</button>
+    </div>
+    <div class="k-row">
+        <button class="k-btn" style="color:var(--danger)" onclick="press('DEL')">⌫</button>
+        <button class="k-btn" onclick="press('0')">0</button>
+        <button class="k-btn" style="background:var(--primary); color:black;" onclick="handleEnter()">OK</button>
     </div>
 </div>
 
-<div id="settingsModal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <h3 style="color:var(--primary); margin:0;">Settings</h3>
-        <hr style="border:0.5px solid #333;">
+<div id="historyPage" class="overlay">
+    <div class="modal">
+        <h3 style="color:var(--primary)">History & Winnings</h3>
+        <textarea id="winningPaste" placeholder="Paste Winning List..."></textarea>
+        <button class="btn-s" style="width:100%" onclick="checkWinners()">CHECK WINNERS</button>
         
-        <label>Button Size:</label>
-        <input type="range" min="5" max="30" value="12" oninput="changeBtnSize(this.value)">
-
-        <div class="toggle-row">
-            <span>Entry Sound ðŸ”Š</span>
-            <label class="switch">
-                <input type="checkbox" id="soundToggle" checked onchange="saveSettings()">
-                <span class="slider"></span>
-            </label>
+        <div id="winDisplay" class="hidden" style="background:rgba(3,218,198,0.1); padding:15px; border-radius:15px; margin-top:10px; border:1px solid var(--secondary);">
+            <div id="winContent" style="white-space:pre-wrap; font-family:monospace; font-size:12px;"></div>
+            <div style="font-weight:bold; margin-top:10px; color:var(--secondary);">Total Win: <span id="totalWinAmount">₹0</span></div>
+            <div style="display:flex; gap:5px; margin-top:10px;">
+                <button class="btn-s" onclick="shareWinningList()" style="flex:1; background:#25D366">WhatsApp</button>
+                <button class="btn-p" onclick="copyWinningList()" style="flex:1">Copy</button>
+            </div>
+        </div>
+        <hr style="opacity:0.1; margin:15px 0;">
+        <div id="savedList" class="data-list"></div>
+        <div class="btn-row" style="grid-template-columns: 1fr 1fr; margin-top:15px;">
+            <button class="btn-p" onclick="renderSaved(true)">MERGE & SORT</button>
+            <button class="btn-s" style="background:#25D366" onclick="shareMergedData()">SHARE ALL</button>
         </div>
 
-        <div class="toggle-row">
-            <span>Duplicate Merge ðŸ§¬</span>
-            <label class="switch">
-                <input type="checkbox" id="mergeToggle" onchange="saveSettings()">
-                <span class="slider"></span>
-            </label>
+        <div class="history-footer">
+            <button class="btn-back" onclick="closeModals()">⬅️ BACK</button>
+            <button class="btn-clear-all" onclick="clearAllHistory()">🗑️ CLEAR ALL</button>
         </div>
-
-        <div style="padding: 5px; background: #2c2c2c; border-radius: 8px; margin-top: 10px;">
-            <label style="font-size: 14px;">Count Limit Alert âš ï¸</label>
-            <input id="limitInput" type="number" placeholder="Set Limit (e.g. 100)" style="margin-top:5px;" oninput="saveSettings()">
-        </div>
-
-        <button onclick="toggleLayoutMode()" id="layoutModeBtn" style="background:#444; margin-top:15px;">Enable Move Mode</button>
-        <button style="background:var(--secondary);" onclick="saveCustomStyles()">SAVE & CLOSE</button>
-        <button style="background:var(--danger);" onclick="resetStyles()">RESET ALL</button>
     </div>
 </div>
 
-<div id="smartModal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <h3 style="color:var(--secondary); margin-top:0;">Smart Paste (ABC)</h3>
-        <textarea id="smartPaste" placeholder="Paste here..." style="height:150px;"></textarea>
-        <button style="background:var(--secondary);" onclick="processSmartPaste()">ADD DATA</button>
-        <button style="background:var(--danger);" onclick="toggleSmart(false)">CLOSE</button>
+<div id="smartModal" class="overlay">
+    <div class="modal">
+        <h3 style="color:var(--secondary)">Smart Paste (ABC)</h3>
+        <textarea id="smartPaste" placeholder="Paste data here..." style="height:150px;"></textarea>
+        <button class="btn-s" style="width:100%; margin-top:10px;" onclick="processSmartPaste()">ADD DATA</button>
+        <button class="btn-d" style="width:100%; margin-top:8px; background:#444; color:white;" onclick="closeModals()">CLOSE</button>
     </div>
 </div>
 
-<div class="screen hidden" id="mainPage">
-    <div class="card" id="mainCard">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h3 style="margin:0; color:var(--primary);">Lottery Pro</h3>
-            <div style="display:flex; gap:5px;">
-                <button onclick="openSettings()" style="width:auto; background:none; font-size:20px; padding:5px;">âš™ï¸</button>
-                <button id="btn-share" class="custom-btn" onclick="share()" style="width:auto; font-size:11px; background:#25D366; padding:5px 12px;">SHARE</button>
-                <button id="btn-sort" class="custom-btn" onclick="sortCurrentList()" style="width:auto; font-size:11px; background:#0288d1; padding:5px 12px;">SORT</button>
-                <button id="btn-smart" class="custom-btn" onclick="toggleSmart(true)" style="width:auto; font-size:11px; background:var(--secondary); padding:5px 12px;">SMART</button>
-            </div>
+<div id="settingsModal" class="overlay">
+    <div class="modal">
+        <h3>Settings</h3>
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+            <span>Merge Duplicates</span>
+            <input type="checkbox" id="mergeToggle" style="width:25px;">
         </div>
-
-        <div class="tabs" id="tabsList"></div>
-        <input id="customer" placeholder="à´•à´¸àµà´±àµà´±à´®àµ¼ à´ªàµ‡à´°àµ" oninput="updateTabName()">
-        
-        <div id="normalEntry">
-            <div class="row">
-                <select id="posSelect" style="width:85px; background:#455a64; font-weight:bold;">
-                    <option value="ABC">ABC</option>
-                    <option value="A">A</option><option value="B">B</option><option value="C">C</option>
-                    <option value="AB">AB</option><option value="BC">BC</option><option value="AC">AC</option>
-                </select>
-                <input id="num" placeholder="No" readonly onclick="setFocus('num', event)" style="flex:2;">
-                <input id="count" placeholder="Count" readonly onclick="setFocus('count', event)" style="flex:2;">
-            </div>
-
-            <div class="row">
-                <button id="btn-add" class="custom-btn" style="background:var(--primary); flex: 1;" onclick="addEntry()">ADD</button>
-                <button id="btn-box" class="custom-btn" style="background:#f57c00; flex: 1;" onclick="addBoxEntry()">BOX</button>
-                <button id="btn-step" class="custom-btn" style="background:#0288d1; flex: 1;" onclick="toggleStep(true)">STEP</button>
-            </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+            <span>Entry Sound</span>
+            <input type="checkbox" id="soundToggle" checked style="width:25px;">
         </div>
-
-        <div id="stepEntry" class="hidden" style="background:#263238; padding:10px; border-radius:8px; margin-bottom:10px;">
-            <div class="row">
-                <input id="stepStart" placeholder="Start" readonly onclick="setFocus('stepStart', event)" style="flex:1;">
-                <input id="stepEnd" placeholder="End" readonly onclick="setFocus('stepEnd', event)" style="flex:1;">
-            </div>
-            <div class="row">
-                <input id="stepGap" placeholder="Gap" readonly onclick="setFocus('stepGap', event)" style="flex:1;" value="1">
-                <input id="stepCount" placeholder="Count" readonly onclick="setFocus('stepCount', event)" style="flex:1;">
-            </div>
-            <div class="row">
-                <button style="background:var(--secondary); flex: 1;" onclick="processStep()">ADD STEP</button>
-                <button style="background:var(--danger); flex: 1;" onclick="toggleStep(false)">CANCEL</button>
-            </div>
-        </div>
-
-        <div class="total-section"><span>TOTAL COUNT</span><span id="liveTotal">0</span></div>
-        <div class="list" id="liveList"></div>
-        
-        <div class="row" style="margin-top:10px;">
-            <button id="btn-save" class="custom-btn" style="background:#2e7d32; flex: 1;" onclick="saveDay()">SAVE HISTORY</button>
-        </div>
-        <button id="undoBtn" style="background:#ff9800; display:none; margin-top:5px;" onclick="undoClear()">RESTORE LAST (UNDO)</button>
-        <button id="btn-history" class="custom-btn" style="background:#455a64; margin-top:10px;" onclick="openHistory()">HISTORY & WINNINGS</button>
-        <button id="btn-clear" class="custom-btn" style="background:var(--danger); margin-top: 15px;" onclick="resetTab()">CLEAR CURRENT TAB</button>
+        <button class="btn-p" style="width:100%" onclick="saveSettings()">SAVE & CLOSE</button>
     </div>
-</div>
-
-<div class="screen hidden" id="historyPage">
-    <div class="card">
-        <h3>Winning Tracker</h3>
-        <textarea id="winningPaste" placeholder="Paste winning list here..." style="height:100px;"></textarea>
-        <button style="background:var(--secondary);" onclick="checkWinners()">CHECK WINNINGS</button>
-        <div id="winDisplay" class="hidden">
-            <div id="winContent" style="background:var(--win-bg); padding:10px; border-radius:8px; margin-top:10px; white-space: pre-wrap; font-family: monospace;"></div>
-            <div class="total-section"><span>TOTAL WIN</span><span id="totalWinAmount">â‚¹0</span></div>
-            <div class="row">
-                <button style="background:#25D366; flex:1;" onclick="shareWinningList()">SHARE</button>
-                <button style="background:#0288d1; flex:1;" onclick="copyWinningList()">COPY</button>
-            </div>
-        </div>
-        <hr>
-        <div class="row">
-            <button onclick="renderSaved(true)" style="background:#673AB7; flex:2;">MERGE & SORT</button>
-            <button id="btn-share-merged" onclick="shareMergedData()" style="background:#25D366; flex:1;">SHARE ALL</button>
-        </div>
-        <div class="list" id="savedList"></div>
-        <button onclick="backToMain()">BACK</button>
-        <button style="background:var(--danger);" onclick="clearAllHistory()">CLEAR ALL HISTORY</button>
-    </div>
-</div>
-
-<div id="customKeypad" class="fixed-keypad">
-    <div class="keypad-row"><button onclick="pressKey(1)">1</button><button onclick="pressKey(2)">2</button><button onclick="pressKey(3)">3</button></div>
-    <div class="keypad-row"><button onclick="pressKey(4)">4</button><button onclick="pressKey(5)">5</button><button onclick="pressKey(6)">6</button></div>
-    <div class="keypad-row"><button onclick="pressKey(7)">7</button><button onclick="pressKey(8)">8</button><button onclick="pressKey(9)">9</button></div>
-    <div class="keypad-row"><button style="background:var(--danger);" onclick="pressKey('DEL')">DEL</button><button onclick="pressKey(0)">0</button><button style="background:var(--secondary);" onclick="handleEnterKey()">ENT</button></div>
 </div>
 
 <script>
     let customers = JSON.parse(localStorage.getItem("lottery_customers")) || [{name: "", temp: []}];
     let activeIndex = 0;
     let permanent = JSON.parse(localStorage.getItem("perm_list")) || [];
-    let layoutMode = false;
-    let lastDeletedData = null;
     let currentInputId = 'num';
+    let isNewInput = false;
+    let lastDeletedData = null;
     let lastWinDetails = "";
-    let isNewCount = false;
 
-    const firebaseConfig = { databaseURL: "https://surajlott-4a0b6-default-rtdb.firebaseio.com/" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    function initApp() { renderTabs(); loadSettings(); }
 
-    function saveSettings() {
-        localStorage.setItem("sound_enabled", document.getElementById("soundToggle").checked);
-        localStorage.setItem("merge_enabled", document.getElementById("mergeToggle").checked);
-        localStorage.setItem("count_limit", document.getElementById("limitInput").value);
-    }
-    function loadSettings() {
-        const s = localStorage.getItem("sound_enabled");
-        if (s !== null) document.getElementById("soundToggle").checked = (s === 'true');
-        const m = localStorage.getItem("merge_enabled");
-        if (m !== null) document.getElementById("mergeToggle").checked = (m === 'true');
-        const l = localStorage.getItem("count_limit");
-        if (l !== null) document.getElementById("limitInput").value = l;
-    }
-
-    function setFocus(id, e) {
-        if(e) e.stopPropagation();
-        currentInputId = id;
-        document.querySelectorAll('input').forEach(el => el.classList.remove('input-focus'));
-        document.getElementById(id).classList.add('input-focus');
-        document.getElementById('customKeypad').classList.add('keypad-show');
-        document.body.style.paddingBottom = "280px";
-        if(id === 'count') isNewCount = true;
-    }
-    function hideKeypad() {
-        document.getElementById('customKeypad').classList.remove('keypad-show');
-        document.querySelectorAll('input').forEach(el => el.classList.remove('input-focus'));
-        document.body.style.paddingBottom = "50px";
-    }
-    function hideKeypadOnOutside(e) {
-        const kp = document.getElementById('customKeypad');
-        if(!kp.contains(e.target) && e.target.tagName !== 'INPUT') hideKeypad();
-    }
-    function handleEnterKey() {
-        if(currentInputId === 'num') setFocus('count');
-        else addEntry();
-    }
-
-    function playEntrySound() {
-        if (!document.getElementById("soundToggle").checked) return;
-        try {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = audioCtx.createOscillator();
-            const gn = audioCtx.createGain();
-            osc.connect(gn); gn.connect(audioCtx.destination);
-            osc.frequency.setValueAtTime(880, audioCtx.currentTime); 
-            gn.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-        } catch(e) {}
-    }
-
-    function checkAutoLogin() {
-        const l = localStorage.getItem("login_time");
-        if(l && (new Date().getTime() - l < 12 * 60 * 60 * 1000)) showMain();
-    }
-    function checkLogin() {
-        const p = document.getElementById("loginPhone").value.trim();
-        db.ref('users/' + p).once('value').then((s) => {
-            if(s.val() && s.val().status === 'active') {
-                localStorage.setItem("login_time", new Date().getTime());
-                showMain();
-            } else alert("Denied!");
-        });
-    }
-    function showMain() { 
-        document.getElementById("loginOverlay").classList.add("hidden"); 
-        document.getElementById("mainPage").classList.remove("hidden"); 
-        initTabs(); 
-    }
-
-    function initTabs() {
+    function renderTabs() {
         let h = "";
-        customers.forEach((c, i) => h += `<div class="tab ${i === activeIndex ? 'active' : ''}" onclick="switchTab(${i})">${c.name || 'New'}</div>`);
-        h += `<div class="tab" onclick="addNewCustomer()" style="background:var(--secondary);">+</div>`;
+        customers.forEach((c, i) => h += `<div class="tab ${i === activeIndex ? 'active' : ''}" onclick="switchTab(${i})">${c.name || 'User '+(i+1)}</div>`);
+        h += `<div class="tab" onclick="addTab()" style="background:var(--secondary); color:black;">+</div>`;
         document.getElementById("tabsList").innerHTML = h;
         document.getElementById("customer").value = customers[activeIndex].name;
         renderLive();
     }
-    function switchTab(i) { activeIndex = i; initTabs(); }
-    function addNewCustomer() { customers.push({name: "", temp: []}); activeIndex = customers.length - 1; initTabs(); }
-    function updateTabName() { customers[activeIndex].name = document.getElementById("customer").value; localStorage.setItem("lottery_customers", JSON.stringify(customers)); initTabs(); }
 
-    function pressKey(k) {
-        let inp = document.getElementById(currentInputId);
-        if(currentInputId === 'count' && isNewCount && k !== 'DEL') { inp.value = ""; isNewCount = false; }
-        if(k === 'DEL') inp.value = inp.value.slice(0,-1);
-        else {
-            inp.value += k;
-            if(currentInputId === 'num') {
-                let p = document.getElementById("posSelect").value;
-                let max = (p === "ABC") ? 3 : (p.length === 2 ? 2 : 1);
-                if(inp.value.length >= max) { setFocus('count'); isNewCount = true; }
-            }
+    function switchTab(i) { activeIndex = i; renderTabs(); }
+    function addTab() { customers.push({name: "", temp: []}); activeIndex = customers.length - 1; renderTabs(); }
+    function updateTabName() { customers[activeIndex].name = document.getElementById("customer").value; save(); renderTabs(); }
+
+    function setFocus(id, e) {
+        e.stopPropagation(); currentInputId = id; isNewInput = true;
+        document.querySelectorAll('input').forEach(i => i.classList.remove('input-focus'));
+        document.getElementById(id).classList.add('input-focus');
+        document.getElementById("customKeypad").classList.add("keypad-show");
+    }
+
+    function hideKeypadOnOutside(e) { if(!e.target.closest('.keypad') && !e.target.closest('input')) { document.getElementById("customKeypad").classList.remove("keypad-show"); document.querySelectorAll('input').forEach(i => i.classList.remove('input-focus')); } }
+
+    function press(k) {
+        let el = document.getElementById(currentInputId);
+        if(isNewInput && k !== 'DEL') { el.value = ""; isNewInput = false; }
+        if(k === 'DEL') el.value = el.value.slice(0, -1);
+        else el.value += k;
+
+        if(currentInputId === 'num') {
+            let p = document.getElementById("posSelect").value;
+            let max = (p === 'ABC') ? 3 : (p.length === 2 ? 2 : 1);
+            if(el.value.length >= max) { setFocus('count', {stopPropagation:()=>{}}); }
         }
-        playEntrySound();
+        playSnd();
+    }
+
+    function handleEnter() {
+        if(currentInputId === 'count' || currentInputId === 'stepCount') addEntry();
+        else { setFocus(currentInputId === 'num' ? 'count' : 'num', {stopPropagation:()=>{}}); }
     }
 
     function addEntry() {
@@ -316,26 +279,15 @@
         if(!n || isNaN(c)) return;
         n = n.padStart(p==='ABC'?3:p.length, '0');
 
-        let limit = parseInt(localStorage.getItem("count_limit"));
-        if(limit > 0) {
-            let total = customers[activeIndex].temp.reduce((acc, i) => (i.p === p && i.n === n ? acc + i.c : acc), 0);
-            if(total + c > limit && !confirm(`à´²à´¿à´®à´¿à´±àµà´±àµ à´•à´´à´¿à´žàµà´žàµ! à´šàµ‡àµ¼à´•àµà´•à´£àµ‹?`)) return;
-        }
-
         let merged = false;
         if(document.getElementById("mergeToggle").checked) {
             let idx = customers[activeIndex].temp.findIndex(i => i.p === p && i.n === n);
-            if(idx > -1) {
-                let item = customers[activeIndex].temp.splice(idx, 1)[0];
-                item.c += c;
-                customers[activeIndex].temp.unshift(item); 
-                merged = true;
-            }
+            if(idx > -1) { customers[activeIndex].temp[idx].c += c; merged = true; }
         }
-        if(!merged) customers[activeIndex].temp.unshift({p: p, n: n, c: c}); 
+        if(!merged) customers[activeIndex].temp.unshift({p, n, c});
 
-        document.getElementById("num").value = ""; 
-        renderLive(); setFocus('num'); isNewCount = true; 
+        document.getElementById("num").value = ""; document.getElementById("count").value = "";
+        setFocus('num', {stopPropagation:()=>{}}); renderLive(); save();
     }
 
     function addBoxEntry() {
@@ -345,213 +297,163 @@
         for(let i=0;i<3;i++) for(let j=0;j<3;j++) for(let k=0;k<3;k++) if(i!==j && j!==k && i!==k) res.push(s[i]+s[j]+s[k]);
         [...new Set(res)].forEach(bx => {
             let idx = customers[activeIndex].temp.findIndex(i => i.p === "ABC" && i.n === bx);
-            if(idx > -1 && document.getElementById("mergeToggle").checked) {
-                let item = customers[activeIndex].temp.splice(idx, 1)[0];
-                item.c += c; customers[activeIndex].temp.unshift(item);
-            } else {
-                customers[activeIndex].temp.unshift({p: "ABC", n: bx, c: c});
-            }
+            if(idx > -1 && document.getElementById("mergeToggle").checked) customers[activeIndex].temp[idx].c += c;
+            else customers[activeIndex].temp.unshift({p: "ABC", n: bx, c: c});
         });
-        document.getElementById("num").value = ""; renderLive(); playEntrySound(); setFocus('num');
+        renderLive(); save();
     }
 
     function renderLive() {
         let h = ""; let t = 0;
         customers[activeIndex].temp.forEach((item, i) => {
-            h += `<div class="item ${i === 0 ? 'merged-highlight' : ''}"><span><b>${item.p}</b> ${item.n} -- ${item.c}</span><button class="del-btn" onclick="delItem(${i})">ðŸ—‘ï¸</button></div>`;
+            h += `<div class="list-item"><div><span>${item.p}</span> <b>${item.n}</b></div><div style="display:flex; align-items:center; gap:15px;"><b>${item.c}</b><button onclick="delItem(${i})" style="background:none; color:var(--danger); font-size:18px;">✕</button></div></div>`;
             t += item.c;
         });
-        document.getElementById("liveList").innerHTML = h || "<p style='text-align:center;'>à´¡à´¾à´±àµà´± à´’à´¨àµà´¨àµà´®à´¿à´²àµà´²</p>";
+        document.getElementById("liveList").innerHTML = h || "<p style='text-align:center; padding:20px; color:var(--text-dim)'>No Data</p>";
         document.getElementById("liveTotal").innerText = t;
-        localStorage.setItem("lottery_customers", JSON.stringify(customers));
-        setTimeout(() => { document.querySelectorAll('.item').forEach(el => el.classList.remove('merged-highlight')); }, 1000);
     }
 
-    function sortCurrentList() {
-        customers[activeIndex].temp.sort((a, b) => b.c - a.c);
-        renderLive();
-    }
-
-    function delItem(idx) { if(confirm("à´‡à´¤àµ à´¨àµ€à´•àµà´•à´‚ à´šàµ†à´¯àµà´¯à´£àµ‹?")) { customers[activeIndex].temp.splice(idx, 1); renderLive(); } }
-    function resetTab() { if(confirm("à´ˆ à´Ÿà´¾à´¬àµ à´•àµà´²à´¿à´¯àµ¼ à´šàµ†à´¯àµà´¯à´£àµ‹?")) { customers[activeIndex].temp = []; customers[activeIndex].name = ""; initTabs(); } }
+    function delItem(i) { customers[activeIndex].temp.splice(i, 1); renderLive(); save(); }
+    function sortCurrentList() { customers[activeIndex].temp.sort((a,b) => b.c - a.c); renderLive(); }
+    function resetTab() { if(confirm("Clear Tab?")) { customers[activeIndex].temp = []; customers[activeIndex].name = ""; document.getElementById("customer").value = ""; renderTabs(); save(); } }
 
     function share() {
-        let d = [...customers[activeIndex].temp], n = document.getElementById("customer").value;
+        let d = [...customers[activeIndex].temp], n = document.getElementById("customer").value || "Customer";
         if(d.length === 0) return;
         lastDeletedData = { name: n, temp: d, index: activeIndex };
-        document.getElementById("undoBtn").style.display = "block";
-        let txt = `ðŸ“‹ *${n || 'Customer'}*\n------------------\n`, t = 0;
-        d.forEach(i => { txt += `${i.p} ${i.n} - ${i.c}\n`; t += i.c; });
-        txt += `------------------\nTotal: ${t}`;
-        customers[activeIndex].temp = []; customers[activeIndex].name = ""; 
-        initTabs(); window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
+        document.getElementById("undoBtn").classList.remove("hidden");
+        
+        let txt = `💎 *${n}*\n━━━━━━━━━━━\n`;
+        let t = 0;
+        d.forEach(i => { txt += `▫️ ${i.p} ${i.n} : ${i.c}\n`; t += i.c; });
+        txt += `━━━━━━━━━━━\n✅ *Total: ${t}*`;
+        
+        customers[activeIndex].temp = []; 
+        customers[activeIndex].name = "";
+        document.getElementById("customer").value = ""; 
+        
+        renderTabs(); save();
+        window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
     }
-    
+
     function undoClear() { 
         if(lastDeletedData) { 
             customers[lastDeletedData.index].temp = lastDeletedData.temp; 
-            customers[lastDeletedData.index].name = lastDeletedData.name; 
-            document.getElementById("undoBtn").style.display = "none"; 
-            initTabs(); 
+            customers[lastDeletedData.index].name = lastDeletedData.name;
+            document.getElementById("undoBtn").classList.add("hidden"); 
+            renderTabs(); save(); 
         } 
     }
 
-    function toggleSmart(s) { document.getElementById("smartModal").classList.toggle("hidden", !s); }
     function processSmartPaste() {
         let text = document.getElementById("smartPaste").value;
         let regex = /(\d{3})(?:[^\d]+)(\d+)/g, m;
         while ((m = regex.exec(text)) !== null) {
             let n = m[1], c = parseInt(m[2]);
-            let idx = customers[activeIndex].temp.findIndex(i => i.p === "ABC" && i.n === n);
-            if(idx > -1 && document.getElementById("mergeToggle").checked) {
-                let item = customers[activeIndex].temp.splice(idx, 1)[0];
-                item.c += c; customers[activeIndex].temp.unshift(item);
-            } else customers[activeIndex].temp.unshift({p: "ABC", n: n, c: c});
+            customers[activeIndex].temp.unshift({p: "ABC", n: n, c: c});
         }
-        toggleSmart(false); renderLive();
-    }
-
-    function saveDay() { if(customers[activeIndex].temp.length > 0) { permanent = [...permanent, ...customers[activeIndex].temp]; localStorage.setItem("perm_list", JSON.stringify(permanent)); alert("History Saved!"); } }
-    function openHistory() { document.getElementById("mainPage").classList.add("hidden"); document.getElementById("historyPage").classList.remove("hidden"); hideKeypad(); renderSaved(); }
-    function backToMain() { document.getElementById("historyPage").classList.add("hidden"); document.getElementById("mainPage").classList.remove("hidden"); }
-
-    function renderSaved(m = false) {
-        let h = ""; let list = [...permanent];
-        if(m) {
-            let dict = {};
-            list.forEach(i => { let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; });
-            list = Object.values(dict).sort((a,b)=>a.n.localeCompare(b.n));
-        }
-        list.slice().reverse().forEach(i => h += `<div class="item"><span>${i.p} ${i.n} -- ${i.c}</span></div>`);
-        document.getElementById("savedList").innerHTML = h;
-    }
-
-    function shareMergedData() {
-        let min = parseInt(prompt("Min count?", "1")) || 0;
-        let dict = {};
-        permanent.forEach(i => { let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; });
-        let txt = `ðŸ“‘ *MERGED LIST*\n------------------\n`;
-        Object.values(dict).sort((a,b)=>a.n.localeCompare(b.n)).forEach(i => { if(i.c >= min) txt += `${i.p} ${i.n} - ${i.c}\n`; });
-        window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
+        closeModals(); renderLive(); save();
     }
 
     function checkWinners() {
         let winText = document.getElementById("winningPaste").value;
         let found = winText.match(/\d{3}/g);
         if(!found) return;
-        
         let first = found[0], wA = first[0], wB = first[1], wC = first[2];
-        let dict = {}; 
-        permanent.forEach(i => { 
-            let k = i.p + "-" + i.n; 
-            dict[k] = (dict[k] || 0) + i.c; 
-        });
-        
         let rep = [], total = 0;
-        
-        Object.keys(dict).forEach(k => {
-            let [p, n] = k.split("-"), count = dict[k], totalPrizeForThisNum = 0;
+        permanent.forEach(i => {
+            let prize = 0, pName = "";
+            if(i.p === "ABC") {
+                if(i.n === first) { prize = 5400; pName = "(1st)"; }
+                else if(found.slice(1,5).includes(i.n)) { prize = 550; pName = "(2nd-5th)"; }
+                else if(found.includes(i.n)) { prize = 35; pName = "(6th+)"; }
+            } else if(i.p === "A" && i.n === wA) prize = 80;
+            else if(i.p === "B" && i.n === wB) prize = 80;
+            else if(i.p === "C" && i.n === wC) prize = 80;
 
-            if(p === "ABC") {
-                if(n === first) { totalPrizeForThisNum += 5400; }
-                if(found.length > 1 && n === found[1]) { totalPrizeForThisNum += 550; }
-                if(found.length > 2 && n === found[2]) { totalPrizeForThisNum += 270; }
-                if(found.length > 3 && n === found[3]) { totalPrizeForThisNum += 120; }
-                if(found.length > 4 && n === found[4]) { totalPrizeForThisNum += 80; }
-                
-                for(let i = 5; i < found.length; i++) {
-                    if(found[i] === n) { totalPrizeForThisNum += 35; }
-                }
-            }
-            
-            if(p === "A" && n === wA) { totalPrizeForThisNum += 80; }
-            if(p === "B" && n === wB) { totalPrizeForThisNum += 80; }
-            if(p === "C" && n === wC) { totalPrizeForThisNum += 80; }
-            
-            if(totalPrizeForThisNum > 0) { 
-                rep.push(`${n}.. ${count} * ${totalPrizeForThisNum} = ${count * totalPrizeForThisNum}`); 
-                total += count * totalPrizeForThisNum; 
-            }
+            if(prize > 0) { rep.push(`💠 ${i.n} ${pName} » ${i.c} × ${prize} = ${i.c * prize}`); total += i.c * prize; }
         });
-        
         document.getElementById("winDisplay").classList.remove("hidden");
-        document.getElementById("winContent").innerText = rep.length > 0 ? rep.join("\n") : "à´µà´¿à´œà´¯à´¿à´•àµ¾ à´‡à´²àµà´²";
-        document.getElementById("totalWinAmount").innerText = "â‚¹" + total;
-        lastWinDetails = `ðŸ† WIN REPORT\n${rep.join("\n")}\nTotal: â‚¹${total}`;
+        document.getElementById("winContent").innerText = rep.join("\n") || "No Winners";
+        document.getElementById("totalWinAmount").innerText = "₹" + total;
+        lastWinDetails = `✨ *WIN REPORT* ✨\n\n${rep.join("\n")}\n\n💵 *Total: ₹${total}*`;
     }
 
-    function shareWinningList() { if(lastWinDetails) window.location.href = "whatsapp://send?text=" + encodeURIComponent(lastWinDetails); }
+    function shareWinningList() { window.location.href = "whatsapp://send?text=" + encodeURIComponent(lastWinDetails); }
+    function copyWinningList() { navigator.clipboard.writeText(lastWinDetails); alert("Copied!"); }
+
+    function toggleModal(id) { document.getElementById(id).classList.add("flex"); }
+    function closeModals() { document.querySelectorAll('.overlay').forEach(m => m.classList.remove('flex')); }
+    function openHistory() { toggleModal('historyPage'); renderSaved(); }
     
-    // à´ªàµà´¤àµà´•àµà´•à´¿à´¯ à´•àµ‹à´ªàµà´ªà´¿ à´«à´™àµà´•àµà´·àµ» - à´‡à´¤àµ à´Žà´²àµà´²à´¾ à´«àµ‹à´£à´¿à´²àµà´‚ à´ªàµà´°à´µàµ¼à´¤àµà´¤à´¿à´•àµà´•àµà´‚
-    function copyWinningList() { 
-        if(!lastWinDetails) return;
-        let t = document.createElement("textarea");
-        t.value = lastWinDetails;
-        document.body.appendChild(t);
-        t.select();
-        t.setSelectionRange(0, 99999); // à´®àµŠà´¬àµˆàµ½ à´«àµ‹à´£àµà´•àµ¾à´•àµà´•à´¾à´¯à´¿
-        try {
-            document.execCommand('copy');
-            alert("Winning Report Copied!");
-        } catch (err) {
-            alert("Error copying text");
+    function renderSaved(m = false) {
+        let list = [...permanent];
+        if(m) {
+            let dict = {};
+            list.forEach(i => { let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; });
+            list = Object.values(dict).sort((a,b) => b.c - a.c);
         }
-        document.body.removeChild(t);
+        let h = "";
+        list.slice().reverse().forEach(i => h += `<div class="list-item"><span>${i.p} ${i.n}</span> <b>${i.c}</b></div>`);
+        document.getElementById("savedList").innerHTML = h;
     }
 
-    function clearAllHistory() { if(confirm("Clear all?")) { permanent=[]; localStorage.setItem("perm_list", "[]"); renderSaved(); } }
-    function toggleStep(s) { document.getElementById("normalEntry").classList.toggle("hidden", s); document.getElementById("stepEntry").classList.toggle("hidden", !s); }
+    function shareMergedData() {
+        let dict = {}; permanent.forEach(i => { let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; });
+        let txt = `📑 *MERGED LIST*\n━━━━━━━━━━━\n`;
+        Object.values(dict).sort((a,b)=>a.n.localeCompare(b.n)).forEach(i => txt += `▫️ ${i.p} ${i.n} : ${i.c}\n`);
+        window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
+    }
+
+    function saveDay() { 
+        if(customers[activeIndex].temp.length > 0) {
+            permanent = [...permanent, ...customers[activeIndex].temp]; 
+            localStorage.setItem("perm_list", JSON.stringify(permanent)); 
+            alert("History Saved!"); 
+        }
+    }
+    
+    // Clear History AND Winning Report
+    function clearAllHistory() { 
+        if(confirm("Are you sure you want to clear ALL saved history and winning reports?")) { 
+            permanent = []; 
+            localStorage.setItem("perm_list", "[]"); 
+            
+            // Clear Winning Related Items
+            document.getElementById("winningPaste").value = "";
+            document.getElementById("winContent").innerText = "";
+            document.getElementById("totalWinAmount").innerText = "₹0";
+            document.getElementById("winDisplay").classList.add("hidden");
+            lastWinDetails = "";
+            
+            renderSaved(); 
+        } 
+    }
+    
+    function save() { localStorage.setItem("lottery_customers", JSON.stringify(customers)); }
+    function loadSettings() { 
+        document.getElementById("mergeToggle").checked = localStorage.getItem("merge") === 'true'; 
+        document.getElementById("soundToggle").checked = localStorage.getItem("sound") !== 'false';
+    }
+    function saveSettings() { localStorage.setItem("merge", document.getElementById("mergeToggle").checked); localStorage.setItem("sound", document.getElementById("soundToggle").checked); closeModals(); }
+
+    function playSnd() {
+        if(document.getElementById("soundToggle").checked) {
+            let a = new AudioContext(); let o = a.createOscillator(); let g = a.createGain();
+            o.connect(g); g.connect(a.destination); o.frequency.value = 850; g.gain.value = 0.05;
+            o.start(); o.stop(a.currentTime + 0.08);
+        }
+    }
+
+    function toggleStep(s) { document.getElementById("stepEntry").classList.toggle("hidden", !s); if(s) setFocus('stepStart', {stopPropagation:()=>{}}); }
     function processStep() {
-        let s = parseInt(document.getElementById("stepStart").value), e = parseInt(document.getElementById("stepEnd").value), c = parseInt(document.getElementById("stepCount").value), p = document.getElementById("posSelect").value, g = parseInt(document.getElementById("stepGap").value) || 1;
+        let s = parseInt(document.getElementById("stepStart").value), e = parseInt(document.getElementById("stepEnd").value), c = parseInt(document.getElementById("stepCount").value), g = parseInt(document.getElementById("stepGap").value) || 1, p = document.getElementById("posSelect").value;
         for(let i=s; i<=e; i+=g) {
             let n = i.toString().padStart(p==='ABC'?3:p.length,'0');
-            let idx = customers[activeIndex].temp.findIndex(item => item.p === p && item.n === n);
-            if(idx > -1 && document.getElementById("mergeToggle").checked) {
-                let item = customers[activeIndex].temp.splice(idx, 1)[0];
-                item.c += c; customers[activeIndex].temp.unshift(item);
-            } else customers[activeIndex].temp.unshift({p:p, n:n, c:c});
+            customers[activeIndex].temp.unshift({p, n, c});
         }
-        toggleStep(false); renderLive(); playEntrySound();
+        toggleStep(false); renderLive(); save();
     }
-    function openSettings() { document.getElementById("settingsModal").classList.remove("hidden"); }
-    function changeBtnSize(v) { document.documentElement.style.setProperty('--btn-pad', v + 'px'); }
-    function toggleLayoutMode() {
-        layoutMode = !layoutMode;
-        document.getElementById("layoutModeBtn").style.background = layoutMode ? "red" : "#444";
-        ['btn-share', 'btn-smart', 'btn-add', 'btn-box', 'btn-step', 'btn-save', 'btn-history', 'btn-clear', 'btn-sort'].forEach(id => {
-            let el = document.getElementById(id);
-            if(layoutMode) { el.classList.add('draggable'); makeDraggable(el); }
-            else { el.classList.remove('draggable'); el.style.position = ""; }
-        });
-    }
-    function makeDraggable(el) {
-        let p1=0, p2=0, p3=0, p4=0; el.onmousedown = dS; el.ontouchstart = dS;
-        function dS(e) { e.preventDefault(); p3 = e.clientX || e.touches[0].clientX; p4 = e.clientY || e.touches[0].clientY; document.onmouseup = dE; document.ontouchend = dE; document.onmousemove = dM; document.ontouchmove = dM; }
-        function dM(e) { e.preventDefault(); let x = e.clientX || e.touches[0].clientX, y = e.clientY || e.touches[0].clientY; p1=p3-x; p2=p4-y; p3=x; p4=y; el.style.top = (el.offsetTop-p2)+"px"; el.style.left = (el.offsetLeft-p1)+"px"; el.style.position = "absolute"; }
-        function dE() { document.onmouseup = null; document.onmousemove = null; document.ontouchend = null; document.ontouchmove = null; }
-    }
-    function saveCustomStyles() {
-        saveSettings();
-        let s = { pad: getComputedStyle(document.documentElement).getPropertyValue('--btn-pad'), pos: {} };
-        ['btn-share', 'btn-smart', 'btn-add', 'btn-box', 'btn-step', 'btn-save', 'btn-history', 'btn-clear', 'btn-sort'].forEach(id => {
-            let el = document.getElementById(id);
-            s.pos[id] = { t: el.style.top, l: el.style.left, p: el.style.position };
-        });
-        localStorage.setItem("user_ui_v2", JSON.stringify(s));
-        document.getElementById("settingsModal").classList.add("hidden");
-        if(layoutMode) toggleLayoutMode();
-    }
-    function loadCustomStyles() {
-        let s = JSON.parse(localStorage.getItem("user_ui_v2"));
-        if(s) {
-            document.documentElement.style.setProperty('--btn-pad', s.pad);
-            for(let id in s.pos) {
-                let el = document.getElementById(id);
-                if(el) { el.style.top = s.pos[id].t; el.style.left = s.pos[id].l; el.style.position = s.pos[id].p; }
-            }
-        }
-    }
-    function resetStyles() { localStorage.removeItem("user_ui_v2"); location.reload(); }
 </script>
 </body>
 </html>
