@@ -90,6 +90,19 @@
     .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
     .price-input-box { display: flex; flex-direction: column; }
     .price-input-box label { font-size: 10px; color: var(--text-dim); margin-left: 5px; }
+
+    /* New CSS for Last Entry Label */
+    .last-entry-indicator {
+        background: rgba(187, 134, 252, 0.15);
+        color: var(--primary);
+        padding: 5px 12px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: bold;
+        border: 1px solid var(--primary);
+        display: none;
+        white-space: nowrap;
+    }
 </style>
 </head>
 <body onclick="hideKeypadOnOutside(event)" onload="initApp()">
@@ -120,7 +133,11 @@
         <div class="tabs-wrapper" id="tabsList" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px;"></div>
 
         <div class="glass-panel">
-            <input id="customer" placeholder="Customer Name" oninput="updateTabName()">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                <input id="customer" placeholder="Customer Name" oninput="updateTabName()" style="margin:0;">
+                <div id="lastEntryLabel" class="last-entry-indicator"></div>
+            </div>
+            
             <div style="display: flex; gap: 8px;">
                 <select id="posSelect" style="flex: 1;">
                     <option value="ABC">ABC</option><option value="A">A</option><option value="B">B</option><option value="C">C</option>
@@ -307,6 +324,7 @@
         h += `<div class="tab" onclick="addTab()" style="background:var(--secondary); color:black; padding: 8px 16px; border-radius: 15px; display:inline-block;">+</div>`;
         document.getElementById("tabsList").innerHTML = h;
         document.getElementById("customer").value = customers[activeIndex].name;
+        document.getElementById("lastEntryLabel").style.display = "none";
         renderLive();
     }
 
@@ -350,6 +368,12 @@
         let n = document.getElementById("num").value, c = parseInt(document.getElementById("count").value), p = document.getElementById("posSelect").value;
         if(!n || isNaN(c)) return;
         n = n.padStart(p==='ABC'?3:p.length, '0');
+
+        // Show last entry near Customer Name
+        let label = document.getElementById("lastEntryLabel");
+        label.innerText = `${p} ${n} - ${c}`;
+        label.style.display = "block";
+
         let merged = false;
         if(document.getElementById("mergeToggle").checked) {
             let idx = customers[activeIndex].temp.findIndex(i => i.p === p && i.n === n);
@@ -391,6 +415,7 @@
         customers[activeIndex].temp = [];
         customers[activeIndex].name = "";
         document.getElementById("customer").value = "";
+        document.getElementById("lastEntryLabel").style.display = "none";
         renderTabs();
         save();
         window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
@@ -401,6 +426,7 @@
             customers[activeIndex].temp = [];
             customers[activeIndex].name = ""; 
             document.getElementById("customer").value = "";
+            document.getElementById("lastEntryLabel").style.display = "none";
             renderTabs();
             save();
             showToast("Page Cleared!");
@@ -468,6 +494,11 @@
     function addBoxEntry() {
         let n = document.getElementById("num").value, c = parseInt(document.getElementById("count").value);
         if(!n || isNaN(c)) return;
+
+        let label = document.getElementById("lastEntryLabel");
+        label.innerText = `BOX ${n} - ${c}`;
+        label.style.display = "block";
+
         let s = n.padStart(3, '0').split(''), res = [];
         for(let i=0;i<3;i++) for(let j=0;j<3;j++) for(let k=0;k<3;k++) if(i!==j && j!==k && i!==k) res.push(s[i]+s[j]+s[k]);
         [...new Set(res)].forEach(bx => {
