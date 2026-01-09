@@ -91,7 +91,6 @@
     .price-input-box { display: flex; flex-direction: column; }
     .price-input-box label { font-size: 10px; color: var(--text-dim); margin-left: 5px; }
 
-    /* New CSS for Last Entry Label */
     .last-entry-indicator {
         background: rgba(187, 134, 252, 0.15);
         color: var(--primary);
@@ -123,11 +122,12 @@
             </div>
         </div>
 
-        <div class="action-row" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px;">
-            <button class="btn-p" style="font-size: 10px; padding: 10px 0;" onclick="toggleModal('smartModal')">🚀 SMART</button>
-            <button class="btn-p" style="font-size: 10px; padding: 10px 0;" onclick="sortCurrentList()">📊 SORT</button>
-            <button class="btn-p" style="font-size: 10px; padding: 10px 0;" onclick="saveDay()">💾 SAVE</button>
-            <button class="btn-p" style="font-size: 10px; padding: 10px 0; background:var(--danger); color:white;" onclick="resetTab()">🗑️ CLEAR</button>
+        <div class="action-row" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 15px;">
+            <button class="btn-p" style="font-size: 9px; padding: 10px 0;" onclick="toggleModal('smartModal')">🚀 SMART</button>
+            <button class="btn-p" style="font-size: 9px; padding: 10px 0;" onclick="sortCurrentList()">📊 SORT</button>
+            <button class="btn-p" style="font-size: 9px; padding: 10px 0;" onclick="saveDay()">💾 SAVE</button>
+            <button class="btn-o" style="font-size: 9px; padding: 10px 0;" onclick="mainCutCount()">✂️ CUT</button>
+            <button class="btn-p" style="font-size: 9px; padding: 10px 0; background:var(--danger); color:white;" onclick="resetTab()">🗑️ CLR</button>
         </div>
 
         <div class="tabs-wrapper" id="tabsList" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px;"></div>
@@ -203,9 +203,10 @@
         </div>
         <hr style="opacity:0.1; margin:15px 0;">
         <div id="savedList" style="max-height: 300px; overflow-y: auto;"></div>
-        <div class="btn-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:15px;">
-            <button class="btn-p" onclick="renderSaved(true)">MERGE & SORT</button>
-            <button class="btn-s" style="background:#25D366" onclick="shareMergedData()">SHARE ALL</button>
+        <div class="btn-row" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px; margin-top:15px;">
+            <button class="btn-p" style="font-size:11px;" onclick="renderSaved(true)">MERGE & SORT</button>
+            <button class="btn-s" style="font-size:11px; background:#25D366" onclick="shareMergedData()">SHARE ALL</button>
+            <button class="btn-o" style="font-size:11px;" onclick="historyCutShare()">✂️ CUT SHARE</button>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:15px;">
             <button class="btn-p" style="background:#444; color:white; padding:12px;" onclick="closeModals()">BACK</button>
@@ -369,7 +370,6 @@
         if(!n || isNaN(c)) return;
         n = n.padStart(p==='ABC'?3:p.length, '0');
 
-        // Show last entry near Customer Name
         let label = document.getElementById("lastEntryLabel");
         label.innerText = `${p} ${n} - ${c}`;
         label.style.display = "block";
@@ -432,6 +432,56 @@
             showToast("Page Cleared!");
         }
     }
+
+    // --- UPDATED CUT COUNT FUNCTIONS ---
+    function mainCutCount() {
+        if(customers[activeIndex].temp.length === 0) return;
+        let cutValue = prompt("എത്ര കൗണ്ട് വീതം കുറയ്ക്കണം?", "5");
+        if(cutValue === null || isNaN(parseInt(cutValue))) return;
+        cutValue = parseInt(cutValue);
+        
+        // കൗണ്ട് കുറയ്ക്കുന്നു, ശേഷം കൗണ്ട് 0-ൽ കൂടുതൽ ഉള്ളവ മാത്രം നിലനിർത്തുന്നു
+        customers[activeIndex].temp = customers[activeIndex].temp
+            .map(item => {
+                item.c = Math.max(0, item.c - cutValue);
+                return item;
+            })
+            .filter(item => item.c > 0);
+        
+        renderLive();
+        save();
+        showToast(cutValue + " കൗണ്ട് വീതം കുറച്ചു!");
+    }
+
+    function historyCutShare() {
+        let cutValue = prompt("ഷെയർ ചെയ്യുമ്പോൾ എത്ര കൗണ്ട് വീതം കുറയ്ക്കണം?", "5");
+        if(cutValue === null || isNaN(parseInt(cutValue))) return;
+        cutValue = parseInt(cutValue);
+
+        let dict = {}; 
+        permanent.forEach(i => { 
+            let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; 
+        });
+        
+        let filtered = Object.values(dict).sort((a,b)=> b.c - a.c);
+        let txt = `📑 *CUT LIST (Less ${cutValue})*\n━━━━━━━━━━━\n`;
+        let countVisible = 0;
+
+        filtered.forEach(i => {
+            let finalC = Math.max(0, i.c - cutValue);
+            if(finalC > 0) {
+                txt += `▫️ ${i.p} ${i.n} : ${finalC}\n`;
+                countVisible++;
+            }
+        });
+
+        if(countVisible === 0) {
+            alert("ഈ വാല്യൂ കുറച്ചാൽ ലിസ്റ്റിൽ നമ്പറുകൾ ഒന്നും ബാക്കിയില്ല!");
+            return;
+        }
+        window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
+    }
+    // -------------------------------
 
     function toggleModal(id) { document.getElementById(id).classList.add("flex"); }
 
@@ -617,3 +667,4 @@
 </script>
 </body>
 </html>
+
