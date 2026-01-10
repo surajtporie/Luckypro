@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Lottery Pro Max - Premium UI</title>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Noto+Sans+Malayalam:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Noto+Sans+Malayalam:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
     :root {
@@ -40,6 +40,10 @@
         box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     }
 
+    .stat-item b, .last-entry-indicator, .k-btn, #liveTotal, .list-item b, .res-card b {
+        font-family: 'Orbitron', sans-serif;
+    }
+
     .stat-item b { font-size: 24px; color: var(--secondary); text-shadow: 0 0 10px rgba(3,218,198,0.2); }
 
     .bottom-nav {
@@ -58,17 +62,34 @@
         border-radius: 50px; font-weight: bold; z-index: 5000; transition: 0.5s;
     }
 
+    /* --- ADDED SMOOTH SLIDE & SCALE ANIMATION --- */
+    @keyframes slideScaleIn {
+        0% { 
+            opacity: 0; 
+            transform: translateY(30px) scale(0.9); 
+        }
+        100% { 
+            opacity: 1; 
+            transform: translateY(0) scale(1); 
+        }
+    }
+
     .list-item { 
         display: flex; justify-content: space-between; align-items: center; 
         padding: 12px 15px; border-bottom: 1px solid var(--glass);
-        animation: slideIn 0.3s ease-out;
+        animation: slideScaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
-    @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
 
     input, select, textarea {
         background: rgba(255,255,255,0.07); border: 1px solid transparent; border-radius: 12px;
         padding: 12px; color: white; font-size: 16px; width: 100%; box-sizing: border-box; margin: 5px 0;
     }
+    
+    #num, #count, #stepStart, #stepEnd, #stepGap, #stepCount {
+        font-family: 'Orbitron', sans-serif;
+        letter-spacing: 1px;
+    }
+
     .input-focus { border-color: var(--primary) !important; background: rgba(255,255,255,0.1) !important; outline: none; }
 
     button { border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
@@ -88,20 +109,22 @@
     .k-btn { background: #2a2a35; height: 55px; border-radius: 14px; font-size: 22px; color: white; border: none; }
     
     .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-    .price-input-box { display: flex; flex-direction: column; }
     .price-input-box label { font-size: 10px; color: var(--text-dim); margin-left: 5px; }
 
     .last-entry-indicator {
-        background: rgba(187, 134, 252, 0.15);
+        background: rgba(187, 134, 252, 0.2);
         color: var(--primary);
-        padding: 5px 12px;
-        border-radius: 10px;
-        font-size: 12px;
-        font-weight: bold;
-        border: 1px solid var(--primary);
+        padding: 8px 15px;
+        border-radius: 12px;
+        font-size: 22px;
+        font-weight: 800;
+        border: 2px solid var(--primary);
         display: none;
         white-space: nowrap;
+        text-shadow: 0 0 10px rgba(187, 134, 252, 0.3);
     }
+    
+    .res-card { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; margin-top: 8px; border: 1px solid var(--glass); font-size: 13px; }
 </style>
 </head>
 <body onclick="hideKeypadOnOutside(event)" onload="initApp()">
@@ -133,8 +156,8 @@
         <div class="tabs-wrapper" id="tabsList" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px;"></div>
 
         <div class="glass-panel">
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                <input id="customer" placeholder="Customer Name" oninput="updateTabName()" style="margin:0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <input id="customer" placeholder="Customer Name" oninput="updateTabName()" style="margin:0; flex: 1;">
                 <div id="lastEntryLabel" class="last-entry-indicator"></div>
             </div>
             
@@ -191,11 +214,20 @@
 <div id="historyPage" class="overlay">
     <div class="modal glass-panel" style="max-height: 90vh; overflow-y: auto; width: 95%;">
         <h3 style="color:var(--primary)">History & Winnings</h3>
+        
+        <div style="margin-bottom: 10px;">
+            <label style="font-size: 11px; color: var(--text-dim);">Select Saved Result Date:</label>
+            <select id="historyResultDate" onchange="loadResultToBox()" style="background: rgba(255,255,255,0.1); border: 1px solid var(--glass);">
+                <option value="">-- Choose Date --</option>
+            </select>
+        </div>
+
         <textarea id="winningPaste" placeholder="Paste Winning List..."></textarea>
         <button class="btn-s" style="width:100%" onclick="checkWinners()">CHECK WINNERS</button>
+        
         <div id="winDisplay" class="hidden" style="background:rgba(3,218,198,0.1); padding:15px; border-radius:15px; margin-top:10px; border:1px solid var(--secondary);">
             <div id="winContent" style="white-space:pre-wrap; font-family:monospace; font-size:12px;"></div>
-            <div style="font-weight:bold; margin-top:10px; color:var(--secondary);">Total Win: <span id="totalWinAmount">₹0</span></div>
+            <div style="font-weight:bold; margin-top:10px; color:var(--secondary);">Total Win: <span id="totalWinAmount" style="font-family:'Orbitron'">₹0</span></div>
             <div style="display:flex; gap:5px; margin-top:10px;">
                 <button class="btn-s" onclick="shareWinningList()" style="flex:1; background:#25D366">WhatsApp</button>
                 <button class="btn-p" onclick="copyWinningList()" style="flex:1">Copy</button>
@@ -219,6 +251,14 @@
     <div class="modal glass-panel" style="max-height: 90vh; overflow-y: auto;">
         <h3 style="color:var(--primary)">Settings</h3>
         
+        <div class="glass-panel" style="background: rgba(255,255,255,0.05); margin-bottom: 20px; padding: 10px;">
+            <h4 style="margin-top:0; font-size: 14px; color: var(--secondary);">Save Lottery Result</h4>
+            <input type="date" id="resDate" style="font-size: 13px;">
+            <textarea id="resNumbers" placeholder="Enter Result Numbers here..." style="height: 60px; font-size: 13px;"></textarea>
+            <button class="btn-s" onclick="saveWinningResult()" style="width: 100%; font-size: 12px; padding: 8px;">SAVE RESULT</button>
+            <div id="resHistoryList" style="margin-top: 10px; max-height: 100px; overflow-y: auto;"></div>
+        </div>
+
         <label style="font-size: 12px; color:var(--text-dim)">THEME</label>
         <div style="margin: 10px 0 20px 0;">
             <div style="width: 35px; height: 35px; border-radius: 50%; background:#bb86fc; display:inline-block; margin-right:10px; cursor:pointer; border:2px solid white;" onclick="setTheme('')"></div>
@@ -262,6 +302,7 @@
     let customers = JSON.parse(localStorage.getItem("lottery_customers")) || [{name: "", temp: []}];
     let activeIndex = 0;
     let permanent = JSON.parse(localStorage.getItem("perm_list")) || [];
+    let savedResults = JSON.parse(localStorage.getItem("saved_results")) || {};
     
     let prizes = JSON.parse(localStorage.getItem("lottery_prizes")) || { p1:5400, p2:550, p3:270, p4:120, p5:80, p6:35, ps:80 };
     
@@ -273,8 +314,61 @@
     function initApp() { 
         renderTabs(); 
         loadSettings(); 
+        renderResultHistory();
+        updateResultDropdown();
         document.body.className = localStorage.getItem("app_theme") || "";
         showToast("Welcome Back! 🚀");
+    }
+
+    function saveWinningResult() {
+        let date = document.getElementById("resDate").value;
+        let numbers = document.getElementById("resNumbers").value;
+        if(!date || !numbers) { alert("Please fill date and numbers"); return; }
+        savedResults[date] = numbers;
+        localStorage.setItem("saved_results", JSON.stringify(savedResults));
+        document.getElementById("resNumbers").value = "";
+        renderResultHistory();
+        updateResultDropdown();
+        showToast("Result Saved!");
+    }
+
+    function renderResultHistory() {
+        let h = "";
+        let keys = Object.keys(savedResults).sort().reverse();
+        keys.forEach(k => {
+            h += `<div class="res-card" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div><b style="font-family:'Orbitron'">${k}</b>: ${savedResults[k].substring(0,10)}...</div>
+                    <button onclick="deleteResult('${k}')" style="background:none; color:var(--danger);">✕</button>
+                  </div>`;
+        });
+        document.getElementById("resHistoryList").innerHTML = h || "<p style='font-size:10px; text-align:center;'>No Saved Results</p>";
+    }
+
+    function deleteResult(k) {
+        if(confirm("Delete this result?")) {
+            delete savedResults[k];
+            localStorage.setItem("saved_results", JSON.stringify(savedResults));
+            renderResultHistory();
+            updateResultDropdown();
+        }
+    }
+
+    function updateResultDropdown() {
+        let sel = document.getElementById("historyResultDate");
+        sel.innerHTML = '<option value="">-- Choose Date --</option>';
+        let keys = Object.keys(savedResults).sort().reverse();
+        keys.forEach(k => {
+            let opt = document.createElement("option");
+            opt.value = k; opt.innerText = k;
+            sel.appendChild(opt);
+        });
+    }
+
+    function loadResultToBox() {
+        let date = document.getElementById("historyResultDate").value;
+        if(date && savedResults[date]) {
+            document.getElementById("winningPaste").value = savedResults[date];
+        }
     }
 
     function showToast(msg) {
@@ -389,7 +483,7 @@
     function renderLive() {
         let h = ""; let t = 0;
         customers[activeIndex].temp.forEach((item, i) => {
-            h += `<div class="list-item"><div><span>${item.p}</span> <b style="color:var(--primary); font-size:18px; margin-left:10px;">${item.n}</b></div><div style="display:flex; align-items:center; gap:15px;"><b>${item.c}</b><button onclick="delItem(${i})" style="background:none; color:var(--danger); font-size:18px; border:none;">✕</button></div></div>`;
+            h += `<div class="list-item"><div><span>${item.p}</span> <b style="color:var(--primary); font-size:18px; margin-left:10px;">${item.n}</b></div><div style="display:flex; align-items:center; gap:15px;"><b style="font-family:'Orbitron'">${item.c}</b><button onclick="delItem(${i})" style="background:none; color:var(--danger); font-size:18px; border:none;">✕</button></div></div>`;
             t += item.c;
         });
         document.getElementById("liveList").innerHTML = h || "<p style='text-align:center; padding:20px; color:var(--text-dim)'>No Data</p>";
@@ -405,9 +499,9 @@
     }
 
     function share() {
-        let d = [...customers[activeIndex].temp], n = document.getElementById("customer").value || "Customer";
+        let d = [...customers[activeIndex].temp].slice().reverse(), n = document.getElementById("customer").value || "Customer";
         if(d.length === 0) return;
-        lastDeletedData = { name: n, temp: [...d], index: activeIndex };
+        lastDeletedData = { name: n, temp: [...customers[activeIndex].temp], index: activeIndex };
         document.getElementById("undoMini").style.display = "flex"; 
         let txt = `💎 *${n}*\n━━━━━━━━━━━\n`, t = 0;
         d.forEach(i => { txt += `▫️ ${i.p} ${i.n} : ${i.c}\n`; t += i.c; });
@@ -433,14 +527,12 @@
         }
     }
 
-    // --- UPDATED CUT COUNT FUNCTIONS ---
     function mainCutCount() {
         if(customers[activeIndex].temp.length === 0) return;
         let cutValue = prompt("എത്ര കൗണ്ട് വീതം കുറയ്ക്കണം?", "5");
         if(cutValue === null || isNaN(parseInt(cutValue))) return;
         cutValue = parseInt(cutValue);
         
-        // കൗണ്ട് കുറയ്ക്കുന്നു, ശേഷം കൗണ്ട് 0-ൽ കൂടുതൽ ഉള്ളവ മാത്രം നിലനിർത്തുന്നു
         customers[activeIndex].temp = customers[activeIndex].temp
             .map(item => {
                 item.c = Math.max(0, item.c - cutValue);
@@ -481,7 +573,6 @@
         }
         window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
     }
-    // -------------------------------
 
     function toggleModal(id) { document.getElementById(id).classList.add("flex"); }
 
@@ -529,7 +620,7 @@
             list = Object.values(dict).sort((a,b) => b.c - a.c); 
         } else { list = list.slice().reverse(); }
         let h = ""; 
-        list.forEach(i => h += `<div class="list-item"><span>${i.p} ${i.n}</span> <b>${i.c}</b></div>`);
+        list.forEach(i => h += `<div class="list-item"><span>${i.p} <b style="font-family:'Orbitron'">${i.n}</b></span> <b style="font-family:'Orbitron'">${i.c}</b></div>`);
         document.getElementById("savedList").innerHTML = h || "<p style='text-align:center; padding:10px;'>No History</p>";
     }
 
@@ -667,4 +758,3 @@
 </script>
 </body>
 </html>
-
