@@ -62,16 +62,9 @@
         border-radius: 50px; font-weight: bold; z-index: 5000; transition: 0.5s;
     }
 
-    /* --- ADDED SMOOTH SLIDE & SCALE ANIMATION --- */
     @keyframes slideScaleIn {
-        0% { 
-            opacity: 0; 
-            transform: translateY(30px) scale(0.9); 
-        }
-        100% { 
-            opacity: 1; 
-            transform: translateY(0) scale(1); 
-        }
+        0% { opacity: 0; transform: translateY(30px) scale(0.9); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .list-item { 
@@ -504,7 +497,12 @@
         lastDeletedData = { name: n, temp: [...customers[activeIndex].temp], index: activeIndex };
         document.getElementById("undoMini").style.display = "flex"; 
         let txt = `💎 *${n}*\n━━━━━━━━━━━\n`, t = 0;
-        d.forEach(i => { txt += `▫️ ${i.p} ${i.n} : ${i.c}\n`; t += i.c; });
+        d.forEach(i => { 
+            // ABC ഒഴിവാക്കി ബാക്കിയുള്ള പൊസിഷനുകൾ മാത്രം വെക്കുന്നു
+            let pDisp = (i.p === 'ABC') ? "" : i.p + " ";
+            txt += `▫️ ${pDisp}${i.n} : ${i.c}\n`; 
+            t += i.c; 
+        });
         txt += `━━━━━━━━━━━\n✅ *Total: ${t}*`;
         customers[activeIndex].temp = [];
         customers[activeIndex].name = "";
@@ -562,7 +560,9 @@
         filtered.forEach(i => {
             let finalC = Math.max(0, i.c - cutValue);
             if(finalC > 0) {
-                txt += `▫️ ${i.p} ${i.n} : ${finalC}\n`;
+                // ABC ഒഴിവാക്കി
+                let pDisp = (i.p === 'ABC') ? "" : i.p + " ";
+                txt += `▫️ ${pDisp}${i.n} : ${finalC}\n`;
                 countVisible++;
             }
         });
@@ -742,7 +742,11 @@
         }
 
         let txt = `📑 *MERGED LIST (Min: ${min})*\n━━━━━━━━━━━\n`;
-        filtered.forEach(i => txt += `▫️ ${i.p} ${i.n} : ${i.c}\n`);
+        filtered.forEach(i => {
+            // ABC ഒഴിവാക്കി
+            let pDisp = (i.p === 'ABC') ? "" : i.p + " ";
+            txt += `▫️ ${pDisp}${i.n} : ${i.c}\n`;
+        });
         window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
     }
     
