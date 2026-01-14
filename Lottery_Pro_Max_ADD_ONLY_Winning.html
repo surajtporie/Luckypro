@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Lottery Pro Max - Premium UI</title>
+<title>Lottery Pro Max - One Hand UI</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Noto+Sans+Malayalam:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
@@ -40,7 +40,7 @@
         box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     }
 
-    .stat-item b, .last-entry-indicator, .k-btn, #liveTotal, .list-item b, .res-card b {
+    .stat-item b, .last-entry-indicator, .k-btn, #liveTotal, .list-item b, .res-card b, .history-total-bar {
         font-family: 'Orbitron', sans-serif;
     }
 
@@ -97,10 +97,37 @@
     .flex { display: flex !important; }
     .hidden { display: none !important; }
 
-    .keypad { position: fixed; bottom: -100%; left: 0; width: 100%; background: #181820; padding: 15px; border-radius: 30px 30px 0 0; z-index: 3000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-sizing: border-box; }
+    /* ONE-HAND KEYPAD STYLES */
+    .keypad { 
+        position: fixed; bottom: -100%; right: 0; width: 85%; 
+        background: #181820; padding: 15px; 
+        border-radius: 30px 0 0 0; z-index: 3000; 
+        transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+        box-sizing: border-box;
+        box-shadow: -10px -10px 40px rgba(0,0,0,0.5);
+        border-left: 2px solid var(--primary);
+    }
     .keypad-show { bottom: 0; }
-    .k-btn { background: #2a2a35; height: 55px; border-radius: 14px; font-size: 22px; color: white; border: none; }
-    
+    .k-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .k-btn { 
+        background: #2a2a35; height: 60px; border-radius: 14px; 
+        font-size: 24px; color: white; border: none; 
+        display: flex; align-items: center; justify-content: center;
+        touch-action: manipulation;
+    }
+    .k-btn:active { background: var(--primary); color: black; }
+    .k-ok { background: var(--secondary) !important; color: #000 !important; }
+    .k-del { color: var(--danger) !important; }
+
+    /* HISTORY TOTAL BAR */
+    .history-total-bar {
+        background: rgba(187, 134, 252, 0.15);
+        padding: 12px; border-radius: 12px;
+        margin-bottom: 12px; border: 1px solid var(--primary);
+        text-align: center; color: var(--primary);
+        font-size: 18px; font-weight: bold;
+    }
+
     .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
     .price-input-box label { font-size: 10px; color: var(--text-dim); margin-left: 5px; }
 
@@ -139,8 +166,8 @@
         </div>
 
         <div class="action-row" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 15px;">
-            <button class="btn-p" style="font-size: 9px; padding: 10px 0;" onclick="toggleModal('smartModal')">🚀 SMART</button>
-            <button class="btn-p" style="font-size: 9px; padding: 10px 0;" onclick="sortCurrentList()">📊 SORT</button>
+            <button class="btn-p" style="font-size: 9px; padding: 10px 0;" onclick="toggleModal('smartModal')">📝 SMART</button>
+            <button class="btn-p" style="font-size: 9px; padding: 10px 0;" onclick="sortCurrentList()">🔄 SORT</button>
             <button class="btn-p" style="font-size: 9px; padding: 10px 0;" onclick="saveDay()">💾 SAVE</button>
             <button class="btn-o" style="font-size: 9px; padding: 10px 0;" onclick="mainCutCount()">✂️ CUT</button>
             <button class="btn-p" style="font-size: 9px; padding: 10px 0; background:var(--danger); color:white;" onclick="resetTab()">🗑️ CLR</button>
@@ -195,12 +222,15 @@
 </div>
 
 <div id="customKeypad" class="keypad">
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+    <div style="text-align: right; padding-bottom: 8px;">
+        <button onclick="hideKeypadOnOutside({target:document.body})" style="background:none; border:none; color:var(--text-dim); font-size:12px;">CLOSE ✖</button>
+    </div>
+    <div class="k-grid">
         <button class="k-btn" onclick="press('1')">1</button><button class="k-btn" onclick="press('2')">2</button><button class="k-btn" onclick="press('3')">3</button>
         <button class="k-btn" onclick="press('4')">4</button><button class="k-btn" onclick="press('5')">5</button><button class="k-btn" onclick="press('6')">6</button>
         <button class="k-btn" onclick="press('7')">7</button><button class="k-btn" onclick="press('8')">8</button><button class="k-btn" onclick="press('9')">9</button>
-        <button class="k-btn" style="color:var(--danger)" onclick="press('DEL')">⌫</button><button class="k-btn" onclick="press('0')">0</button>
-        <button class="k-btn" style="background:var(--primary); color:black;" onclick="handleEnter()">OK</button>
+        <button class="k-btn k-del" onclick="press('DEL')">⌫</button><button class="k-btn" onclick="press('0')">0</button>
+        <button class="k-btn k-ok" onpointerdown="startOkLongPress()" onpointerup="endOkLongPress()" onpointerleave="endOkLongPress()" onclick="handleEnter()">OK</button>
     </div>
 </div>
 
@@ -304,13 +334,34 @@
     let lastDeletedData = null;
     let lastWinDetails = "";
 
+    // Long Press logic for OK button
+    let okTimer;
+    let isLongPress = false;
+
     function initApp() { 
         renderTabs(); 
         loadSettings(); 
         renderResultHistory();
         updateResultDropdown();
         document.body.className = localStorage.getItem("app_theme") || "";
-        showToast("Welcome Back! 🚀");
+        showToast("Welcome Back! 👋");
+    }
+
+    function startOkLongPress() {
+        isLongPress = false;
+        okTimer = setTimeout(() => {
+            isLongPress = true;
+            if (customers[activeIndex].temp.length > 0) {
+                share();
+                showToast("Sharing to WhatsApp...");
+            } else {
+                showToast("No data to share!");
+            }
+        }, 800);
+    }
+
+    function endOkLongPress() {
+        clearTimeout(okTimer);
     }
 
     function saveWinningResult() {
@@ -331,7 +382,7 @@
         keys.forEach(k => {
             h += `<div class="res-card" style="display:flex; justify-content:space-between; align-items:center;">
                     <div><b style="font-family:'Orbitron'">${k}</b>: ${savedResults[k].substring(0,10)}...</div>
-                    <button onclick="deleteResult('${k}')" style="background:none; color:var(--danger);">✕</button>
+                    <button onclick="deleteResult('${k}')" style="background:none; color:var(--danger);">🗑️</button>
                   </div>`;
         });
         document.getElementById("resHistoryList").innerHTML = h || "<p style='font-size:10px; text-align:center;'>No Saved Results</p>";
@@ -421,7 +472,8 @@
     function updateTabName() { customers[activeIndex].name = document.getElementById("customer").value; save(); renderTabs(); }
 
     function setFocus(id, e) {
-        e.stopPropagation(); currentInputId = id; isNewInput = true;
+        if(e && e.stopPropagation) e.stopPropagation(); 
+        currentInputId = id; isNewInput = true;
         document.querySelectorAll('input').forEach(i => i.classList.remove('input-focus'));
         document.getElementById(id).classList.add('input-focus');
         document.getElementById("customKeypad").classList.add("keypad-show");
@@ -439,17 +491,37 @@
         if(isNewInput && k !== 'DEL') { el.value = ""; isNewInput = false; }
         if(k === 'DEL') el.value = el.value.slice(0, -1);
         else el.value += k;
-        if(currentInputId === 'num') {
-            let p = document.getElementById("posSelect").value;
-            let max = (p === 'ABC') ? 3 : (p.length === 2 ? 2 : 1);
-            if(el.value.length >= max) { setFocus('count', {stopPropagation:()=>{}}); }
+        
+        let p = document.getElementById("posSelect").value;
+        let max = (p === 'ABC') ? 3 : (p.length === 2 ? 2 : 1);
+
+        // Auto Jump for Main Entry
+        if(currentInputId === 'num' && el.value.length >= max) {
+            setFocus('count');
+        } 
+        // Auto Jump for Step Entry
+        else if(currentInputId === 'stepStart' && el.value.length >= max) {
+            setFocus('stepEnd');
         }
+        else if(currentInputId === 'stepEnd' && el.value.length >= max) {
+            setFocus('stepGap');
+        }
+        else if(currentInputId === 'stepGap' && el.value.length >= 1) {
+            setFocus('stepCount');
+        }
+
         playSnd(0); 
     }
 
     function handleEnter() {
-        if(currentInputId === 'count' || currentInputId === 'stepCount') addEntry();
-        else { setFocus(currentInputId === 'num' ? 'count' : 'num', {stopPropagation:()=>{}}); }
+        if (isLongPress) { isLongPress = false; return; }
+        if(currentInputId === 'count') addEntry();
+        else if(currentInputId === 'stepCount') processStep();
+        else { 
+            let seq = ['num', 'count', 'stepStart', 'stepEnd', 'stepGap', 'stepCount'];
+            let idx = seq.indexOf(currentInputId);
+            if(idx > -1 && idx < seq.length - 1) setFocus(seq[idx+1]);
+        }
     }
 
     function addEntry() {
@@ -469,14 +541,18 @@
         if(!merged) customers[activeIndex].temp.unshift({p, n, c, time: Date.now()});
         playSnd(c); 
         document.getElementById("num").value = ""; 
-        setFocus('num', {stopPropagation:()=>{}}); 
+        document.getElementById("count").value = ""; 
+        
+        // Return focus to number field
+        setTimeout(() => setFocus('num'), 50);
+        
         renderLive(); save();
     }
 
     function renderLive() {
         let h = ""; let t = 0;
         customers[activeIndex].temp.forEach((item, i) => {
-            h += `<div class="list-item"><div><span>${item.p}</span> <b style="color:var(--primary); font-size:18px; margin-left:10px;">${item.n}</b></div><div style="display:flex; align-items:center; gap:15px;"><b style="font-family:'Orbitron'">${item.c}</b><button onclick="delItem(${i})" style="background:none; color:var(--danger); font-size:18px; border:none;">✕</button></div></div>`;
+            h += `<div class="list-item"><div><span>${item.p}</span> <b style="color:var(--primary); font-size:18px; margin-left:10px;">${item.n}</b></div><div style="display:flex; align-items:center; gap:15px;"><b style="font-family:'Orbitron'">${item.c}</b><button onclick="delItem(${i})" style="background:none; color:var(--danger); font-size:18px; border:none;">🗑️</button></div></div>`;
             t += item.c;
         });
         document.getElementById("liveList").innerHTML = h || "<p style='text-align:center; padding:20px; color:var(--text-dim)'>No Data</p>";
@@ -484,7 +560,7 @@
     }
 
     function delItem(i) {
-        if(confirm("ഈ എൻട്രി ഡിലീറ്റ് ചെയ്യണോ?")) {
+        if(confirm("ഈ എൻട്രി നീക്കം ചെയ്യണോ?")) {
             customers[activeIndex].temp.splice(i, 1);
             renderLive();
             save();
@@ -496,14 +572,13 @@
         if(d.length === 0) return;
         lastDeletedData = { name: n, temp: [...customers[activeIndex].temp], index: activeIndex };
         document.getElementById("undoMini").style.display = "flex"; 
-        let txt = `💎 *${n}*\n━━━━━━━━━━━\n`, t = 0;
+        let txt = `🎫 *${n}*\n━━━━━━━━━━━\n`, t = 0;
         d.forEach(i => { 
-            // ABC ഒഴിവാക്കി ബാക്കിയുള്ള പൊസിഷനുകൾ മാത്രം വെക്കുന്നു
             let pDisp = (i.p === 'ABC') ? "" : i.p + " ";
-            txt += `▫️ ${pDisp}${i.n} : ${i.c}\n`; 
+            txt += `🔹 ${pDisp}${i.n} : ${i.c}\n`; 
             t += i.c; 
         });
-        txt += `━━━━━━━━━━━\n✅ *Total: ${t}*`;
+        txt += `━━━━━━━━━━━\n📊 *Total: ${t}*`;
         customers[activeIndex].temp = [];
         customers[activeIndex].name = "";
         document.getElementById("customer").value = "";
@@ -514,7 +589,7 @@
     }
 
     function resetTab() {
-        if(confirm("ഈ പേജിലെ എല്ലാ ഡാറ്റയും ക്ലിയർ ചെയ്യണോ?")) {
+        if(confirm("ഈ പേജിലെ എല്ലാ എൻട്രികളും നീക്കം ചെയ്യണോ?")) {
             customers[activeIndex].temp = [];
             customers[activeIndex].name = ""; 
             document.getElementById("customer").value = "";
@@ -527,7 +602,7 @@
 
     function mainCutCount() {
         if(customers[activeIndex].temp.length === 0) return;
-        let cutValue = prompt("എത്ര കൗണ്ട് വീതം കുറയ്ക്കണം?", "5");
+        let cutValue = prompt("എല്ലാ കൗണ്ടിൽ നിന്നും എത്ര വീതം കുറയ്ക്കണം?", "5");
         if(cutValue === null || isNaN(parseInt(cutValue))) return;
         cutValue = parseInt(cutValue);
         
@@ -544,7 +619,7 @@
     }
 
     function historyCutShare() {
-        let cutValue = prompt("ഷെയർ ചെയ്യുമ്പോൾ എത്ര കൗണ്ട് വീതം കുറയ്ക്കണം?", "5");
+        let cutValue = prompt("ഹിസ്റ്ററിയിലെ ലിസ്റ്റിൽ നിന്നും എത്ര വീതം കുറച്ച് ഷെയർ ചെയ്യണം?", "5");
         if(cutValue === null || isNaN(parseInt(cutValue))) return;
         cutValue = parseInt(cutValue);
 
@@ -554,23 +629,25 @@
         });
         
         let filtered = Object.values(dict).sort((a,b)=> b.c - a.c);
-        let txt = `📑 *CUT LIST (Less ${cutValue})*\n━━━━━━━━━━━\n`;
+        let txt = `📊 *CUT LIST*\n━━━━━━━━━━━\n`;
         let countVisible = 0;
+        let finalTotal = 0;
 
         filtered.forEach(i => {
             let finalC = Math.max(0, i.c - cutValue);
             if(finalC > 0) {
-                // ABC ഒഴിവാക്കി
                 let pDisp = (i.p === 'ABC') ? "" : i.p + " ";
-                txt += `▫️ ${pDisp}${i.n} : ${finalC}\n`;
+                txt += `🔹 ${pDisp}${i.n} : ${finalC}\n`;
                 countVisible++;
+                finalTotal += finalC;
             }
         });
 
         if(countVisible === 0) {
-            alert("ഈ വാല്യൂ കുറച്ചാൽ ലിസ്റ്റിൽ നമ്പറുകൾ ഒന്നും ബാക്കിയില്ല!");
+            alert("ഈ ലിസ്റ്റിൽ ഡാറ്റയൊന്നുമില്ല!");
             return;
         }
+        txt += `━━━━━━━━━━━\n📊 *Total Count: ${finalTotal}*`;
         window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
     }
 
@@ -614,14 +691,21 @@
 
     function renderSaved(m = false) {
         let list = [...permanent];
+        let totalCount = 0;
         if(m) { 
             let dict = {}; 
             list.forEach(i => { let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; }); 
             list = Object.values(dict).sort((a,b) => b.c - a.c); 
         } else { list = list.slice().reverse(); }
+        
         let h = ""; 
-        list.forEach(i => h += `<div class="list-item"><span>${i.p} <b style="font-family:'Orbitron'">${i.n}</b></span> <b style="font-family:'Orbitron'">${i.c}</b></div>`);
-        document.getElementById("savedList").innerHTML = h || "<p style='text-align:center; padding:10px;'>No History</p>";
+        list.forEach(i => {
+            h += `<div class="list-item"><span>${i.p} <b style="font-family:'Orbitron'">${i.n}</b></span> <b style="font-family:'Orbitron'">${i.c}</b></div>`;
+            totalCount += i.c;
+        });
+
+        let totalBar = `<div class="history-total-bar">HISTORY TOTAL: ${totalCount}</div>`;
+        document.getElementById("savedList").innerHTML = (list.length > 0) ? (totalBar + h) : "<p style='text-align:center; padding:10px;'>No History</p>";
     }
 
     function saveDay() { 
@@ -632,6 +716,9 @@
         } 
     }
 
+    /**
+     * UPDATED: Box Entry with auto-focus return
+     */
     function addBoxEntry() {
         let n = document.getElementById("num").value, c = parseInt(document.getElementById("count").value);
         if(!n || isNaN(c)) return;
@@ -648,7 +735,12 @@
             else customers[activeIndex].temp.unshift({p: "ABC", n: bx, c: c, time: Date.now()});
         });
         playSnd(c);
-        document.getElementById("num").value = ""; setFocus('num', {stopPropagation:()=>{}});
+        document.getElementById("num").value = ""; 
+        document.getElementById("count").value = ""; 
+        
+        // Return focus to number field for next entry
+        setTimeout(() => setFocus('num'), 50);
+
         renderLive(); save();
     }
 
@@ -661,14 +753,23 @@
         } 
     }
 
-    function toggleStep(s) { document.getElementById("stepEntry").classList.toggle("hidden", !s); }
+    function toggleStep(s) { 
+        document.getElementById("stepEntry").classList.toggle("hidden", !s); 
+        if(s) setFocus('stepStart');
+    }
+    
     function processStep() {
-        let s = parseInt(document.getElementById("stepStart").value), e = parseInt(document.getElementById("stepEnd").value), c = parseInt(document.getElementById("stepCount").value), g = parseInt(document.getElementById("stepGap").value) || 1, p = document.getElementById("posSelect").value;
+        let sInput = document.getElementById("stepStart").value, eInput = document.getElementById("stepEnd").value, c = parseInt(document.getElementById("stepCount").value), g = parseInt(document.getElementById("stepGap").value) || 1, p = document.getElementById("posSelect").value;
+        let s = parseInt(sInput), e = parseInt(eInput);
+        
+        if(isNaN(s) || isNaN(e) || isNaN(c)) return;
+        
         for(let i=s; i<=e; i+=g) { 
             let n = i.toString().padStart(p==='ABC'?3:p.length,'0'); 
             customers[activeIndex].temp.unshift({p, n, c, time: Date.now()}); 
         }
-        toggleStep(false); renderLive(); save();
+        toggleStep(false); renderLive(); save(); showToast("Step Added!");
+        document.getElementById("stepStart").value = ""; document.getElementById("stepEnd").value = ""; document.getElementById("stepCount").value = "";
     }
 
     function checkWinners() {
@@ -694,24 +795,24 @@
             if(i.p === "B" && i.n === wB) { itemPrizeSum += sPrize; wins.push("B"); }
             if(i.p === "C" && i.n === wC) { itemPrizeSum += sPrize; wins.push("C"); }
             if(itemPrizeSum > 0) {
-                rep.push(`💠 ${i.n}(${i.p}) » ${i.c} × ${itemPrizeSum} = ${i.c * itemPrizeSum} [${wins.join("+")}]`);
+                rep.push(`✅ ${i.n}(${i.p}) × ${i.c} × ${itemPrizeSum} = ${i.c * itemPrizeSum} [${wins.join("+")}]`);
                 total += i.c * itemPrizeSum;
             }
         });
         document.getElementById("winDisplay").classList.remove("hidden");
         document.getElementById("winContent").innerText = rep.join("\n") || "No Winners Found";
         document.getElementById("totalWinAmount").innerText = "₹" + total;
-        lastWinDetails = `✨ *WIN REPORT* ✨\n\n${rep.join("\n")}\n\n💵 *Total: ₹${total}*`;
+        lastWinDetails = `📊 *WIN REPORT* 🏆\n\n${rep.join("\n")}\n\n📊 *Total: ₹${total}*`;
     }
 
     function sortCurrentList() { 
-        if(confirm("നിലവിലെ ലിസ്റ്റ് കൗണ്ട് അനുസരിച്ച് സോർട്ട് ചെയ്യണോ?")) {
+        if(confirm("നിലവിലെ ലിസ്റ്റ് കൗണ്ടിന്റെ അടിസ്ഥാനത്തിൽ ക്രമീകരിക്കണോ?")) {
             customers[activeIndex].temp.sort((a,b) => b.c - a.c); renderLive(); 
         }
     }
 
     function clearAllHistory() {
-        if(confirm("ഹിസ്റ്ററി മുഴുവനായി ഡിലീറ്റ് ചെയ്യണോ?")) {
+        if(confirm("ഹിസ്റ്ററിയും വിന്നിംഗ് റിപ്പോർട്ടും ക്ലിയർ ചെയ്യണോ?")) {
             permanent = [];
             localStorage.setItem("perm_list", "[]");
             document.getElementById("winningPaste").value = ""; 
@@ -720,16 +821,17 @@
             document.getElementById("totalWinAmount").innerText = "₹0"; 
             lastWinDetails = ""; 
             renderSaved();
-            showToast("History & Winning Report Cleared!");
+            showToast("History Cleared!");
         }
     }
     
     function shareMergedData() {
-        let min = prompt("ഏറ്റവും കുറഞ്ഞ കൗണ്ട് എത്ര വേണം? (ഉദാഹരണത്തിന് 5 എന്ന് കൊടുത്താൽ 5-ന് താഴെയുള്ളവ ഷെയർ ചെയ്യില്ല)", "1");
+        let min = prompt("ഏറ്റവും കുറഞ്ഞ എത്ര കൗണ്ട് ഉള്ളവ ഷെയർ ചെയ്യണം?", "1");
         if (min === null) return;
         min = parseInt(min) || 0;
 
         let dict = {}; 
+        let finalTotal = 0;
         permanent.forEach(i => { 
             let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; 
         });
@@ -737,24 +839,41 @@
         let filtered = Object.values(dict).filter(i => i.c >= min).sort((a,b)=> b.c - a.c);
         
         if(filtered.length === 0) {
-            alert("ഈ കൗണ്ടിന് മുകളിൽ നമ്പറുകൾ ഒന്നും ഇല്ല!");
+            alert("ലിസ്റ്റിൽ ഡാറ്റയൊന്നുമില്ല!");
             return;
         }
 
-        let txt = `📑 *MERGED LIST (Min: ${min})*\n━━━━━━━━━━━\n`;
+        let txt = `📊 *TOTAL LIST*\n━━━━━━━━━━━\n`;
         filtered.forEach(i => {
-            // ABC ഒഴിവാക്കി
             let pDisp = (i.p === 'ABC') ? "" : i.p + " ";
-            txt += `▫️ ${pDisp}${i.n} : ${i.c}\n`;
+            txt += `🔹 ${pDisp}${i.n} : ${i.c}\n`;
+            finalTotal += i.c;
         });
+        txt += `━━━━━━━━━━━\n📊 *Total Count: ${finalTotal}*`;
         window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
     }
     
     function processSmartPaste() {
-        let text = document.getElementById("smartPaste").value;
+        let textArea = document.getElementById("smartPaste");
+        let text = textArea.value;
         let regex = /(\d{3})(?:[^\d]+)(\d+)/g, m;
-        while ((m = regex.exec(text)) !== null) { let n = m[1], c = parseInt(m[2]); customers[activeIndex].temp.unshift({p: "ABC", n: n, c: c, time: Date.now()}); }
-        closeModals(); renderLive(); save();
+        let foundAny = false;
+        
+        while ((m = regex.exec(text)) !== null) { 
+            let n = m[1], c = parseInt(m[2]); 
+            customers[activeIndex].temp.unshift({p: "ABC", n: n, c: c, time: Date.now()}); 
+            foundAny = true;
+        }
+        
+        if(foundAny) {
+            textArea.value = ""; 
+            closeModals(); 
+            renderLive(); 
+            save();
+            showToast("Data Added Successfully!");
+        } else {
+            alert("സാധുവായ ഡാറ്റ കണ്ടെത്താൻ കഴിഞ്ഞില്ല!");
+        }
     }
     
     function shareWinningList() { window.location.href = "whatsapp://send?text=" + encodeURIComponent(lastWinDetails); }
