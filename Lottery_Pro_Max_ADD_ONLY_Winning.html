@@ -235,7 +235,7 @@
                 <input id="stepEnd" placeholder="End" readonly onclick="setFocus('stepEnd', event)">
             </div>
             <div style="display:flex; gap:8px;">
-                <input id="stepGap" placeholder="Gap" value="1" readonly onclick="setFocus('stepGap', event)">
+                <input id="stepGap" placeholder="Gap" value="1" readonly onclick="setFocus('stepGap', event)" maxlength="3">
                 <input id="stepCount" placeholder="Count" readonly onclick="setFocus('stepCount', event)">
             </div>
             <div class="btn-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
@@ -553,7 +553,8 @@
         if(currentInputId === 'num' && el.value.length >= max) { setFocus('count'); } 
         else if(currentInputId === 'stepStart' && el.value.length >= max) { setFocus('stepEnd'); }
         else if(currentInputId === 'stepEnd' && el.value.length >= max) { setFocus('stepGap'); }
-        else if(currentInputId === 'stepGap' && el.value.length >= 1) { setFocus('stepCount'); }
+        // ഈ വരിയിൽ ഗ്യാപ്പ് 3 അക്കം വരെയാക്കി മാറ്റി
+        else if(currentInputId === 'stepGap' && el.value.length >= 3) { setFocus('stepCount'); }
 
         playSnd(0); 
     }
