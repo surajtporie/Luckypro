@@ -21,7 +21,7 @@
         --blur: blur(15px);
     }
 
-    /* Additional Themes */
+    /* Themes */
     .theme-green { --primary: #2ecc71; --secondary: #00cec9; --bg: #0a140a; --card: rgba(20, 29, 20, 0.7); }
     .theme-blue { --primary: #3498db; --secondary: #81ecec; --bg: #0a0f14; --card: rgba(22, 32, 41, 0.7); }
     .theme-gold { --primary: #f1c40f; --secondary: #f39c12; --bg: #1a1a00; --card: rgba(45, 45, 0, 0.7); }
@@ -157,7 +157,6 @@
     
     .res-card { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; margin-top: 8px; border: 1px solid var(--glass); font-size: 13px; }
     
-    /* Toggle Switch Style */
     .switch-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 15px; border-radius: 15px; margin-bottom: 10px; }
     .switch-row span { font-size: 13px; font-weight: bold; color: var(--text-dim); }
     .toggle-wrap { position: relative; width: 45px; height: 24px; }
@@ -172,7 +171,6 @@
     }
     .theme-circle:hover { transform: scale(1.1); border-color: white; }
 
-    /* Recent UI Styles */
     .btn-recent { background: #6c5ce7; color: white; font-size: 8px !important; padding: 10px 0; }
     .recent-block { background: rgba(255,255,255,0.03); border: 1px solid var(--glass); border-radius: 15px; padding: 12px; margin-bottom: 15px; }
     .recent-time { font-size: 10px; color: var(--secondary); font-family: 'Orbitron'; margin-bottom: 8px; border-bottom: 1px solid var(--glass); padding-bottom: 4px; }
@@ -755,16 +753,50 @@
         showToast(cutValue + " കൗണ്ട് വീതം കുറച്ചു!");
     }
 
+    // --- ഹിസ്റ്ററി കട്ട് ഫങ്ക്ഷൻ (FIXED VERSION) ---
     function historyCutShare() {
-        if(permanent.length === 0) { alert("ഹിസ്റ്ററിയിൽ ഡാറ്റ ഇല്ല!"); return; }
-        let cutValue = prompt("ഹിസ്റ്ററിയിലെ എല്ലാ എൻട്രിയിൽ നിന്നും എത്ര കൗണ്ട് കുറയ്ക്കണം?", "5");
-        if(cutValue === null || isNaN(parseInt(cutValue))) return;
+        if (permanent.length === 0) { 
+            alert("ഹിസ്റ്ററിയിൽ ഡാറ്റ ഇല്ല!"); 
+            return; 
+        }
+
+        let cutValue = prompt("ഹിസ്റ്ററിയിലെ ഓരോ നമ്പറിൽ നിന്നും എത്ര കൗണ്ട് വീതം കുറയ്ക്കണം?", "5");
+        if (cutValue === null || isNaN(parseInt(cutValue))) return;
         cutValue = parseInt(cutValue);
-        permanent = permanent.map(item => { item.c = Math.max(0, item.c - cutValue); return item; }).filter(item => item.c > 0);
+
+        // 1. ആദ്യം ഹിസ്റ്ററിയിലെ ഡാറ്റ മെർജ് ചെയ്യുന്നു (ഒരേ നമ്പർ ഒന്നിൽ കൂടുതൽ തവണ വരാതിരിക്കാൻ)
+        let dict = {};
+        permanent.forEach(i => {
+            let k = i.p + "-" + i.n;
+            if (!dict[k]) {
+                dict[k] = { p: i.p, n: i.n, c: 0, time: i.time };
+            }
+            dict[k].c += i.c;
+        });
+
+        // 2. മെർജ് ചെയ്ത ലിസ്റ്റിൽ നിന്ന് മാത്രം കൗണ്ട് കുറയ്ക്കുന്നു
+        let newHistory = [];
+        for (let key in dict) {
+            let item = dict[key];
+            item.c = item.c - cutValue; 
+            
+            if (item.c > 0) {
+                newHistory.push(item);
+            }
+        }
+
+        // 3. ഹിസ്റ്ററി അപ്ഡേറ്റ് ചെയ്യുന്നു
+        permanent = newHistory;
         localStorage.setItem("perm_list", JSON.stringify(permanent));
-        renderSaved();
+        
+        renderSaved(); 
         showToast(cutValue + " കൗണ്ട് വീതം ഹിസ്റ്ററിയിൽ നിന്ന് കുറച്ചു!");
-        if(confirm("കുറച്ചതിനു ശേഷമുള്ള പുതിയ ലിസ്റ്റ് ഷെയർ ചെയ്യണോ?")) shareMergedData();
+
+        setTimeout(() => {
+            if (confirm("കുറച്ചതിനു ശേഷമുള്ള പുതിയ ലിസ്റ്റ് ഷെയർ ചെയ്യണോ?")) {
+                shareMergedData();
+            }
+        }, 300);
     }
 
     function toggleModal(id) { document.getElementById(id).classList.add("flex"); }
@@ -988,49 +1020,25 @@
         });
     }
 
-    // --- SCAN ഫങ്ക്ഷൻ ഇവിടെ ആരംഭിക്കുന്നു ---
     async function processImage(input) {
         if (!input.files || !input.files[0]) return;
-
         showToast("Scanning Image... ⏳");
         const file = input.files[0];
-        
         try {
             const result = await Tesseract.recognize(file, 'eng');
             const text = result.data.text;
-            
             let regex = /(\d{3})(?:[^\d]+)(\d+)/g;
-            let m;
-            let foundAny = false;
-            let scanCount = 0;
-
+            let m, foundAny = false, scanCount = 0;
             while ((m = regex.exec(text)) !== null) {
-                let n = m[1];      
-                let c = parseInt(m[2]); 
-                
+                let n = m[1], c = parseInt(m[2]); 
                 if (n && !isNaN(c)) {
-                    customers[activeIndex].temp.unshift({
-                        p: "ABC", 
-                        n: n, 
-                        c: c, 
-                        time: Date.now()
-                    });
-                    foundAny = true;
-                    scanCount++;
+                    customers[activeIndex].temp.unshift({p: "ABC", n: n, c: c, time: Date.now()});
+                    foundAny = true; scanCount++;
                 }
             }
-
-            if (foundAny) {
-                renderLive();
-                save();
-                showToast(`${scanCount} Entries Added! ✅`);
-            } else {
-                alert("Couldn't read numbers. Try taking a clearer photo.");
-            }
-        } catch (error) {
-            console.error(error);
-            alert("Scan failed. Check internet connection.");
-        }
+            if (foundAny) { renderLive(); save(); showToast(`${scanCount} Entries Added! ✅`); } 
+            else { alert("Couldn't read numbers. Try taking a clearer photo."); }
+        } catch (error) { alert("Scan failed."); }
         input.value = ""; 
     }
 </script>
