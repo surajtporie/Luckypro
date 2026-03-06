@@ -1023,7 +1023,7 @@
         window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
     }
     
-    // SMART PASTE LOGIC WITH >100 CONDITION
+    // UPDATED SMART PASTE LOGIC
     function processSmartPaste() {
         let textArea = document.getElementById("smartPaste");
         let text = textArea.value;
@@ -1040,16 +1040,16 @@
                 let count = 1;
 
                 if (nextNumStr) {
-                    let nextNumVal = parseInt(nextNumStr);
-                    // അടുത്ത നമ്പർ 100-ൽ കൂടുതൽ ആണെങ്കിൽ അതൊരു പുതിയ നമ്പറായി കാണണം (കൗണ്ട് 1)
-                    if (nextNumVal > 100) {
+                    // അടുത്ത നമ്പർ 3 അക്കമുള്ളതാണെങ്കിൽ അല്ലെങ്കിൽ അത് 100-ന് മുകളിൽ ആണെങ്കിൽ
+                    // നിലവിലെ നമ്പറിന്റെ കൗണ്ട് 1 ആയി കണക്കാക്കും
+                    if (nextNumStr.length === 3 || parseInt(nextNumStr) > 100) {
                         count = 1;
-                        // i++ ചെയ്യുന്നില്ല, കാരണം ഈ nextNum അടുത്ത ലൂപ്പിൽ മെയിൻ നമ്പറായി വരണം
+                        // i കൂട്ടുന്നില്ല, കാരണം അടുത്ത 3-അക്ക നമ്പർ അടുത്ത ലൂപ്പിൽ മെയിൻ നമ്പറായി വരണം
                     } 
-                    // അടുത്ത നമ്പർ 100-ഓ അതിൽ താഴെയോ ആണെങ്കിൽ അത് കൗണ്ട് ആണ്
+                    // അടുത്ത നമ്പർ 3 അക്കത്തിൽ താഴെയാണെങ്കിൽ (ഉദാ: 10, 50, 5) അത് കൗണ്ട് ആണ്
                     else {
-                        count = nextNumVal;
-                        i++; // കൗണ്ട് എടുത്തതുകൊണ്ട് അടുത്ത ലൂപ്പിൽ ഈ നമ്പർ ഒഴിവാക്കാൻ
+                        count = parseInt(nextNumStr);
+                        i++; 
                     }
                 } else {
                     count = 1;
