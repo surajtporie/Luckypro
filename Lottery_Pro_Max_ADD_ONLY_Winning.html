@@ -992,33 +992,22 @@
         }
     }
 
-    // UPDATED FULL CLEAR FUNCTION
     function clearAllHistory() {
         if(confirm("ഹിസ്റ്ററി, വിന്നിംഗ് റിപ്പോർട്ട്, സേവ് ചെയ്ത റിസൾട്ടുകൾ എന്നിവ പൂർണ്ണമായും ക്ലിയർ ചെയ്യട്ടെ?")) {
-            // 1. Clear Main History
             permanent = [];
             localStorage.setItem("perm_list", "[]");
-
-            // 2. Clear Saved Lottery Results (from settings)
             savedResults = {};
             localStorage.setItem("saved_results", "{}");
-
-            // 3. Clear Recent/Shared Session History
             recentSessions = [];
             localStorage.setItem("recent_sessions", "[]");
-
-            // 4. Clear Winning Report UI & Data
             document.getElementById("winningPaste").value = "";
             document.getElementById("winContent").innerText = "";
             document.getElementById("totalWinAmount").innerText = "₹0";
             document.getElementById("winDisplay").classList.add("hidden");
             lastWinDetails = "";
-
-            // 5. Update UI components
             renderSaved();
             renderResultHistory();
             updateResultDropdown();
-            
             showToast("എല്ലാം പൂർണ്ണമായും ക്ലിയർ ചെയ്തു! 🗑️");
         }
     }
@@ -1034,11 +1023,59 @@
         window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
     }
     
+    // SMART PASTE LOGIC WITH >100 CONDITION
     function processSmartPaste() {
-        let textArea = document.getElementById("smartPaste"), text = textArea.value, regex = /(\d{3})(?:[^\d]+)(\d+)/g, m, foundAny = false;
-        while ((m = regex.exec(text)) !== null) { customers[activeIndex].temp.unshift({p: "ABC", n: m[1], c: parseInt(m[2]), time: Date.now()}); foundAny = true; }
-        if(foundAny) { textArea.value = ""; closeModals(); renderLive(); save(); showToast("Added!"); } 
+        let textArea = document.getElementById("smartPaste");
+        let text = textArea.value;
+        let numbers = text.match(/\d+/g);
+        if (!numbers || numbers.length === 0) return;
+
+        let foundAny = false;
+        for (let i = 0; i < numbers.length; i++) {
+            let currentNum = numbers[i];
+            
+            // ചെക്ക് ചെയ്യുന്നത് 3 ഡിജിറ്റ് നമ്പർ ആണോ എന്നാണ്
+            if (currentNum.length === 3) {
+                let nextNumStr = numbers[i + 1];
+                let count = 1;
+
+                if (nextNumStr) {
+                    let nextNumVal = parseInt(nextNumStr);
+                    // അടുത്ത നമ്പർ 100-ൽ കൂടുതൽ ആണെങ്കിൽ അതൊരു പുതിയ നമ്പറായി കാണണം (കൗണ്ട് 1)
+                    if (nextNumVal > 100) {
+                        count = 1;
+                        // i++ ചെയ്യുന്നില്ല, കാരണം ഈ nextNum അടുത്ത ലൂപ്പിൽ മെയിൻ നമ്പറായി വരണം
+                    } 
+                    // അടുത്ത നമ്പർ 100-ഓ അതിൽ താഴെയോ ആണെങ്കിൽ അത് കൗണ്ട് ആണ്
+                    else {
+                        count = nextNumVal;
+                        i++; // കൗണ്ട് എടുത്തതുകൊണ്ട് അടുത്ത ലൂപ്പിൽ ഈ നമ്പർ ഒഴിവാക്കാൻ
+                    }
+                } else {
+                    count = 1;
+                }
+
+                customers[activeIndex].temp.unshift({
+                    p: "ABC",
+                    n: currentNum,
+                    c: count,
+                    time: Date.now()
+                });
+                foundAny = true;
+            }
+        }
+        
+        if(foundAny) { 
+            textArea.value = ""; 
+            closeModals(); 
+            renderLive(); 
+            save(); 
+            showToast("Smart Data Added!"); 
+        } else { 
+            showToast("നമ്പറുകൾ ഒന്നും കണ്ടെത്തിയില്ല!"); 
+        }
     }
+
     function shareWinningList() { window.location.href = "whatsapp://send?text=" + encodeURIComponent(lastWinDetails); }
 
     function filterLiveList() {
