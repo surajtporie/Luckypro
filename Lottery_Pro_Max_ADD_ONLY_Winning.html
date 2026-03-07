@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Lottery Pro Max - Full UI</title>
+<title>Lottery Pro Max - Updated</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Noto+Sans+Malayalam:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
@@ -367,7 +367,7 @@
 <div id="smartModal" class="overlay">
     <div class="modal glass-panel">
         <h3>Smart Paste</h3>
-        <textarea id="smartPaste" placeholder="Paste data here..." style="height:150px;"></textarea>
+        <textarea id="smartPaste" placeholder="Paste data here (e.g., 142box 2)..." style="height:150px;"></textarea>
         <button class="btn-s" style="width:100%; margin-top:10px;" onclick="processSmartPaste()">ADD DATA</button>
         <button class="btn-p" style="width:100%; margin-top:10px; background:#444; color:white;" onclick="closeModals()">CLOSE</button>
     </div>
@@ -1023,44 +1023,89 @@
         window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
     }
     
-    // UPDATED SMART PASTE LOGIC
+    // SMART PASTE UPDATED: Handles 3-digit numbers with and without explicit counts
     function processSmartPaste() {
         let textArea = document.getElementById("smartPaste");
-        let text = textArea.value;
-        let numbers = text.match(/\d+/g);
-        if (!numbers || numbers.length === 0) return;
+        let text = textArea.value.toLowerCase();
+        
+        // Match numbers, words like "box" or "bx"
+        let tokens = text.match(/[a-z]+|\d+/g);
+        if (!tokens) return;
 
         let foundAny = false;
-        for (let i = 0; i < numbers.length; i++) {
-            let currentNum = numbers[i];
-            
-            // ചെക്ക് ചെയ്യുന്നത് 3 ഡിജിറ്റ് നമ്പർ ആണോ എന്നാണ്
-            if (currentNum.length === 3) {
-                let nextNumStr = numbers[i + 1];
-                let count = 1;
+        let mergeEnabled = document.getElementById("mainMergeToggle").checked;
 
-                if (nextNumStr) {
-                    // അടുത്ത നമ്പർ 3 അക്കമുള്ളതാണെങ്കിൽ അല്ലെങ്കിൽ അത് 100-ന് മുകളിൽ ആണെങ്കിൽ
-                    // നിലവിലെ നമ്പറിന്റെ കൗണ്ട് 1 ആയി കണക്കാക്കും
-                    if (nextNumStr.length === 3 || parseInt(nextNumStr) > 100) {
-                        count = 1;
-                        // i കൂട്ടുന്നില്ല, കാരണം അടുത്ത 3-അക്ക നമ്പർ അടുത്ത ലൂപ്പിൽ മെയിൻ നമ്പറായി വരണം
-                    } 
-                    // അടുത്ത നമ്പർ 3 അക്കത്തിൽ താഴെയാണെങ്കിൽ (ഉദാ: 10, 50, 5) അത് കൗണ്ട് ആണ്
-                    else {
-                        count = parseInt(nextNumStr);
-                        i++; 
+        for (let i = 0; i < tokens.length; i++) {
+            let current = tokens[i];
+
+            // If current token is a 3-digit number
+            if (/^\d{3}$/.test(current)) {
+                let num = current;
+                let count = 1; // Default count
+                let isBox = false;
+
+                let j = i + 1;
+                let countAssigned = false;
+
+                // Look ahead for "box" or a count value
+                while (j < tokens.length) {
+                    let next = tokens[j];
+                    
+                    if (next === "box" || next === "bx") {
+                        isBox = true;
+                        j++;
+                    } else if (/^\d+$/.test(next)) {
+                        let nextNum = parseInt(next);
+                        // If it's a 3-digit number, it's likely a NEW entry, not a count
+                        // UNLESS it's exactly 100 or something we consider a "count"
+                        // But per requirement, if next is a 3-digit and we didn't specify count,
+                        // this 3-digit is just another ticket.
+                        
+                        if (next.length === 3) {
+                            // Only treat as count if specifically 100 or user logic dictates
+                            // Otherwise, it's the next ticket number, break and leave count as 1
+                            break; 
+                        } else {
+                            // It's a 1, 2, 4 or more digit number. Likely a count.
+                            count = nextNum;
+                            countAssigned = true;
+                            j++;
+                            break;
+                        }
+                    } else {
+                        break; 
                     }
-                } else {
-                    count = 1;
                 }
+                
+                // Special check: If next token was "100" (or any 3 digit) and we WANT it as count
+                // we can handle it. But the logic below follows: "If 3-digit follows 3-digit, first count = 1"
+                
+                i = j - 1; // Skip the tokens we used
 
-                customers[activeIndex].temp.unshift({
-                    p: "ABC",
-                    n: currentNum,
-                    c: count,
-                    time: Date.now()
-                });
+                if (isBox) {
+                    let s = num.split(''), combinations = [];
+                    for(let x=0; x<3; x++) 
+                        for(let y=0; y<3; y++) 
+                            for(let z=0; z<3; z++) 
+                                if(x!==y && y!==z && x!==z) combinations.push(s[x]+s[y]+s[z]);
+                    
+                    let uniqueBox = [...new Set(combinations)];
+                    uniqueBox.forEach(bxNum => {
+                        let merged = false;
+                        if(mergeEnabled) {
+                            let idx = customers[activeIndex].temp.findIndex(item => item.p === "ABC" && item.n === bxNum);
+                            if(idx > -1) { customers[activeIndex].temp[idx].c += count; merged = true; }
+                        }
+                        if(!merged) customers[activeIndex].temp.unshift({ p: "ABC", n: bxNum, c: count, time: Date.now() });
+                    });
+                } else {
+                    let merged = false;
+                    if(mergeEnabled) {
+                        let idx = customers[activeIndex].temp.findIndex(item => item.p === "ABC" && item.n === num);
+                        if(idx > -1) { customers[activeIndex].temp[idx].c += count; merged = true; }
+                    }
+                    if(!merged) customers[activeIndex].temp.unshift({ p: "ABC", n: num, c: count, time: Date.now() });
+                }
                 foundAny = true;
             }
         }
