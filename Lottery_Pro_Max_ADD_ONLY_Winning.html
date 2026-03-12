@@ -327,7 +327,7 @@
         
         <div class="btn-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:15px;">
             <button class="btn-p" style="font-size:11px;" onclick="renderSaved(true)">MERGE & SORT</button>
-            <button class="btn-o" style="font-size:11px;" onclick="historyCutShare()">✂ CUT SHARE</button>
+            <button class="btn-o" style="font-size:11px; background:#e67e22;" onclick="historyCutOnly()">✂ APPLY CUT</button>
         </div>
         <div class="btn-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:8px;">
             <button class="btn-s" style="font-size:11px; background:#25D366" onclick="shareMergedData()">SHARE ALL</button>
@@ -799,42 +799,27 @@
         showToast(cutValue + " കൗണ്ട് വീതം കുറച്ചു!");
     }
 
-    function historyCutShare() {
-        if (permanent.length === 0) { alert("ഹിസ്റ്ററിയിൽ ഡാറ്റ ഇല്ല!"); return; }
-        let cutValue = prompt("ഹിസ്റ്ററിയിലെ ഓരോ നമ്പറിൽ നിന്നും എത്ര കൗണ്ട് വീതം കുറയ്ക്കണം?", "5");
+    function historyCutOnly() {
+        if (permanent.length === 0) { showToast("ഹിസ്റ്ററിയിൽ ഡാറ്റ ഇല്ല!"); return; }
+        let cutValue = prompt("ഓരോ നമ്പറിൽ നിന്നും എത്ര കൗണ്ട് വീതം കുറയ്ക്കണം?", "5");
         if (cutValue === null || isNaN(parseInt(cutValue))) return;
         cutValue = parseInt(cutValue);
 
         let safeBoxText = document.getElementById("safeBoxInput").value;
         let safeNumbers = safeBoxText.match(/\d+/g) || [];
 
-        let dict = {};
-        permanent.forEach(i => {
-            let k = i.p + "-" + i.n;
-            if (!dict[k]) dict[k] = { p: i.p, n: i.n, c: 0 };
-            dict[k].c += i.c;
-        });
+        if(confirm(`ഹിസ്റ്ററിയിലെ നമ്പറുകളിൽ നിന്ന് ${cutValue} കൗണ്ട് വീതം കുറയ്ക്കട്ടെ? (Safe Box നമ്പറുകൾ ഒഴിവാക്കും)`)) {
+            permanent = permanent.map(item => {
+                if (!safeNumbers.includes(item.n)) {
+                    item.c = Math.max(0, item.c - cutValue);
+                }
+                return item;
+            }).filter(item => item.c > 0);
 
-        let txt = ` ✂️ *CUT LIST* (-${cutValue})\n------------------\n`;
-        let total = 0;
-
-        for (let key in dict) {
-            let item = dict[key];
-            let isSafe = safeNumbers.includes(item.n);
-
-            if (!isSafe) {
-                item.c = item.c - cutValue; 
-            }
-
-            if (item.c > 0) {
-                let pDisp = (item.p === 'ABC') ? "" : item.p + " - ";
-                txt += ` KL - ${pDisp}${item.n}  =  ${item.c}\n`;
-                total += item.c;
-            }
+            localStorage.setItem("perm_list", JSON.stringify(permanent));
+            renderSaved(true); 
+            showToast("കൗണ്ട് കുറച്ചു!");
         }
-
-        txt += `------------------\n*Total: ${total}*`;
-        window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
     }
 
     function toggleModal(id) { document.getElementById(id).classList.add("flex"); }
@@ -874,28 +859,56 @@
     }
 
     function renderSaved(m = false) {
-        let list = [...permanent];
+        let list = [];
         let totalCount = 0;
         permanent.forEach(i => totalCount += i.c);
+
         if(m) { 
             let dict = {}; 
-            list.forEach(i => { let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; }); 
+            permanent.forEach(i => { 
+                let k = i.p + "-" + i.n; 
+                if(!dict[k]) {
+                    dict[k] = { p: i.p, n: i.n, c: 0, isMerged: true };
+                }
+                dict[k].c += i.c; 
+            }); 
             list = Object.values(dict).sort((a,b) => b.c - a.c); 
-        } else { list = list.slice().reverse(); }
+        } else { 
+            list = [...permanent].reverse(); 
+        }
+
         let h = ""; 
         list.forEach((i, index) => {
-            let deleteFunc = m ? `alert('Merge Mode-ൽ ഡിലീറ്റ് ചെയ്യാൻ സാധിക്കില്ല.')` : `delHistoryItem(${permanent.length - 1 - index})`;
-            h += `<div class="list-item"><span>${i.p} <b style="font-family:'Orbitron'">${i.n}</b></span> <div style="display:flex; align-items:center; gap:15px;"><b style="font-family:'Orbitron'">${i.c}</b><button onclick="${deleteFunc}" style="background:none; color:var(--danger); font-size:18px; border:none;">🗑</button></div></div>`;
+            let delAction = i.isMerged ? `delMergedNumber('${i.n}', '${i.p}')` : `delHistoryItem(${permanent.length - 1 - index})`;
+            
+            h += `<div class="list-item">
+                    <span>${i.p} <b style="font-family:'Orbitron'">${i.n}</b></span> 
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <b style="font-family:'Orbitron'">${i.c}</b>
+                        <button onclick="${delAction}" style="background:none; color:var(--danger); font-size:18px; border:none;">🗑</button>
+                    </div>
+                  </div>`;
         });
+
         let totalBar = `<div class="history-total-bar">HISTORY TOTAL: ${totalCount}</div>`;
         document.getElementById("savedList").innerHTML = (list.length > 0) ? (totalBar + h) : "<p style='text-align:center; padding:10px;'>No History</p>";
+    }
+
+    function delMergedNumber(num, pos) {
+        if(confirm(`${pos} ${num} എന്ന നമ്പറിന്റെ എല്ലാ എൻട്രികളും ഹിസ്റ്ററിയിൽ നിന്ന് ഒഴിവാക്കട്ടെ?`)) {
+            permanent = permanent.filter(item => !(item.n === num && item.p === pos));
+            localStorage.setItem("perm_list", JSON.stringify(permanent));
+            renderSaved(true);
+            showToast("നമ്പർ ഒഴിവാക്കി!");
+        }
     }
 
     function delHistoryItem(index) {
         if(confirm("ഈ എൻട്രി ഹിസ്റ്ററിയിൽ നിന്ന് ഒഴിവാക്കട്ടെ?")) {
             permanent.splice(index, 1);
             localStorage.setItem("perm_list", JSON.stringify(permanent));
-            renderSaved(); showToast("Entry Deleted!");
+            renderSaved(); 
+            showToast("Entry Deleted!");
         }
     }
 
