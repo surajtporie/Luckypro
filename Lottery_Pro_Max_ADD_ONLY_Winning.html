@@ -21,7 +21,6 @@
         --blur: blur(15px);
     }
 
-    /* Themes */
     .theme-green { --primary: #2ecc71; --secondary: #00cec9; --bg: #0a140a; --card: rgba(20, 29, 20, 0.7); }
     .theme-blue { --primary: #3498db; --secondary: #81ecec; --bg: #0a0f14; --card: rgba(22, 32, 41, 0.7); }
     .theme-gold { --primary: #f1c40f; --secondary: #f39c12; --bg: #1a1a00; --card: rgba(45, 45, 0, 0.7); }
@@ -138,7 +137,6 @@
         font-size: 18px; font-weight: bold;
     }
 
-    /* Safe Box Area */
     .safe-box-area {
         background: rgba(3, 218, 198, 0.05);
         border: 1px dashed var(--secondary);
@@ -205,17 +203,18 @@
             </div>
         </div>
 
-        <div class="action-row" style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin-bottom: 15px;">
-            <button class="btn-p" style="font-size: 8px; padding: 10px 0;" onclick="toggleModal('smartModal')">📋 SMART</button>
-            <button class="btn-p" style="font-size: 8px; padding: 10px 0;" onclick="mergeCurrentList()">🧬 MERGE</button>
-            <button class="btn-p" style="font-size: 8px; padding: 10px 0;" onclick="sortCurrentList()">🔃 SORT</button>
-            <button class="btn-p" style="font-size: 8px; padding: 10px 0;" onclick="saveDay()">💾 SAVE</button>
-            <button class="btn-recent" onclick="openRecentModal()">🕒 RECENT</button>
-            <button class="btn-s" style="font-size: 8px; padding: 10px 0; background:#ff4757; color:white;" onclick="document.getElementById('imageInput').click()">📸 SCAN</button>
-            <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="processImage(this)">
+        <div class="action-row" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px;">
+            <button class="btn-p" style="font-size: 11px; padding: 12px 0;" onclick="toggleModal('smartModal')">📋 SMART</button>
+            <button class="btn-p" style="font-size: 11px; padding: 12px 0;" onclick="mergeCurrentList()">🧬 MERGE</button>
+            <button class="btn-p" style="font-size: 11px; padding: 12px 0;" onclick="sortCurrentList()">🔃 SORT</button>
+            <button class="btn-p" style="font-size: 11px; padding: 12px 0;" onclick="saveDay()">💾 SAVE</button>
             
-            <button class="btn-o" style="font-size: 8px; padding: 10px 0;" onclick="mainCutCount()">✂ CUT</button>
-            <button class="btn-p" style="font-size: 8px; padding: 10px 0; background:var(--danger); color:white;" onclick="resetTab()">🗑 CLR</button>
+            <button class="btn-recent" style="font-size: 11px; padding: 12px 0;" onclick="openRecentModal()">🕒 RECENT</button>
+            <button class="btn-s" style="font-size: 11px; padding: 12px 0; background:#ff4757; color:white;" onclick="document.getElementById('imageInput').click()">📸 SCAN</button>
+            <button class="btn-o" style="font-size: 11px; padding: 12px 0;" onclick="mainCutCount()">✂ CUT</button>
+            <button class="btn-p" style="font-size: 11px; padding: 12px 0; background:var(--danger); color:white;" onclick="resetTab()">🗑 CLR</button>
+            
+            <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="processImage(this)">
         </div>
 
         <div class="tabs-wrapper" id="tabsList" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px;"></div>
@@ -804,21 +803,23 @@
         let cutValue = prompt("ഓരോ നമ്പറിൽ നിന്നും എത്ര കൗണ്ട് വീതം കുറയ്ക്കണം?", "5");
         if (cutValue === null || isNaN(parseInt(cutValue))) return;
         cutValue = parseInt(cutValue);
-
         let safeBoxText = document.getElementById("safeBoxInput").value;
         let safeNumbers = safeBoxText.match(/\d+/g) || [];
-
-        if(confirm(`ഹിസ്റ്ററിയിലെ നമ്പറുകളിൽ നിന്ന് ${cutValue} കൗണ്ട് വീതം കുറയ്ക്കട്ടെ? (Safe Box നമ്പറുകൾ ഒഴിവാക്കും)`)) {
-            permanent = permanent.map(item => {
-                if (!safeNumbers.includes(item.n)) {
-                    item.c = Math.max(0, item.c - cutValue);
-                }
+        if(confirm(`ഹിസ്റ്ററിയിലെ നമ്പറുകൾ മെർജ് ചെയ്ത് അതിൽ നിന്ന് ${cutValue} കൗണ്ട് വീതം കുറയ്ക്കട്ടെ?`)) {
+            let dict = {};
+            permanent.forEach(i => {
+                let k = i.p + "-" + i.n;
+                if(!dict[k]) dict[k] = { p: i.p, n: i.n, c: 0, batchId: Date.now() };
+                dict[k].c += i.c;
+            });
+            let processedData = Object.values(dict).map(item => {
+                if (!safeNumbers.includes(item.n)) item.c = Math.max(0, item.c - cutValue);
                 return item;
             }).filter(item => item.c > 0);
-
+            permanent = processedData;
             localStorage.setItem("perm_list", JSON.stringify(permanent));
             renderSaved(true); 
-            showToast("കൗണ്ട് കുറച്ചു!");
+            showToast("കൗണ്ട് കുറച്ചു, ഡാറ്റ മെർജ് ചെയ്തു!");
         }
     }
 
@@ -862,25 +863,20 @@
         let list = [];
         let totalCount = 0;
         permanent.forEach(i => totalCount += i.c);
-
         if(m) { 
             let dict = {}; 
             permanent.forEach(i => { 
                 let k = i.p + "-" + i.n; 
-                if(!dict[k]) {
-                    dict[k] = { p: i.p, n: i.n, c: 0, isMerged: true };
-                }
+                if(!dict[k]) dict[k] = { p: i.p, n: i.n, c: 0, isMerged: true };
                 dict[k].c += i.c; 
             }); 
             list = Object.values(dict).sort((a,b) => b.c - a.c); 
         } else { 
             list = [...permanent].reverse(); 
         }
-
         let h = ""; 
         list.forEach((i, index) => {
             let delAction = i.isMerged ? `delMergedNumber('${i.n}', '${i.p}')` : `delHistoryItem(${permanent.length - 1 - index})`;
-            
             h += `<div class="list-item">
                     <span>${i.p} <b style="font-family:'Orbitron'">${i.n}</b></span> 
                     <div style="display:flex; align-items:center; gap:15px;">
@@ -889,7 +885,6 @@
                     </div>
                   </div>`;
         });
-
         let totalBar = `<div class="history-total-bar">HISTORY TOTAL: ${totalCount}</div>`;
         document.getElementById("savedList").innerHTML = (list.length > 0) ? (totalBar + h) : "<p style='text-align:center; padding:10px;'>No History</p>";
     }
@@ -916,45 +911,34 @@
         if(customers[activeIndex].temp.length > 0) { 
             let currentDataString = JSON.stringify(customers[activeIndex].temp.map(i => ({p:i.p, n:i.n, c:i.c})));
             let isDuplicate = false;
-            
             if (permanent.length > 0) {
                 let lastBatchId = permanent[permanent.length - 1].batchId;
                 let lastBatchData = permanent.filter(i => i.batchId === lastBatchId).map(i => ({p:i.p, n:i.n, c:i.c}));
                 if (JSON.stringify(lastBatchData) === currentDataString) isDuplicate = true;
             }
-
-            if (isDuplicate) {
-                if (!confirm("ഈ ലിസ്റ്റ് ആൾറെഡി ഹിസ്റ്ററിയിൽ സേവ് ആണ്. വീണ്ടും സേവ് ചെയ്യണോ?")) return;
-            }
-
+            if (isDuplicate && !confirm("ഈ ലിസ്റ്റ് ആൾറെഡി ഹിസ്റ്ററിയിൽ സേവ് ആണ്. വീണ്ടും സേവ് ചെയ്യണോ?")) return;
             let batchId = Date.now();
             let dataWithBatch = customers[activeIndex].temp.map(item => ({...item, batchId: batchId}));
             permanent = [...permanent, ...dataWithBatch]; 
             localStorage.setItem("perm_list", JSON.stringify(permanent)); 
-            
             let n = document.getElementById("customer").value || "Customer";
             addToRecentSessions(n, [...customers[activeIndex].temp], "SAVED");
-            
             showToast("Saved to History! ✅"); 
-            
             customers[activeIndex].temp = [];
             customers[activeIndex].name = "";
             document.getElementById("customer").value = "";
             document.getElementById("lastEntryLabel").style.display = "none";
             document.getElementById("undoMini").style.display = "none";
-            
             renderLive(); renderTabs(); save();
-        } else {
-            showToast("സേവ് ചെയ്യാൻ ഡാറ്റ ഒന്നുമില്ല!");
-        }
+        } else showToast("സേവ് ചെയ്യാൻ ഡാറ്റ ഒന്നുമില്ല!");
     }
 
     function undoLastHistorySave() {
         if (permanent.length === 0) { showToast("No data in History!"); return; }
         if (confirm("അവസാനം ഹിസ്റ്ററിയിലേക്ക് സേവ് ചെയ്ത ബാച്ച് ഒഴിവാക്കട്ടെ?")) {
             let lastBatchId = permanent[permanent.length - 1].batchId;
-            if (!lastBatchId) { permanent.pop(); } 
-            else { permanent = permanent.filter(item => item.batchId !== lastBatchId); }
+            if (!lastBatchId) permanent.pop();
+            else permanent = permanent.filter(item => item.batchId !== lastBatchId);
             localStorage.setItem("perm_list", JSON.stringify(permanent));
             renderSaved(); showToast("Last Save Removed! ↩");
         }
@@ -1007,15 +991,9 @@
         let winText = document.getElementById("winningPaste").value;
         let found = winText.match(/\d{3}/g);
         if(!found || found.length === 0) return;
-        
-        let first = found[0], wA = first[0], wB = first[1], wC = first[2];
-        let totalWinAmount = 0;
-        let historyTotalTickets = 0; 
-        let mergedWinners = {};
-
+        let first = found[0], wA = first[0], wB = first[1], wC = first[2], totalWinAmount = 0, historyTotalTickets = 0, mergedWinners = {};
         permanent.forEach(i => {
             historyTotalTickets += i.c; 
-
             let itemPrizeSum = 0, wins = [];
             if(i.p === "ABC" && i.n === found[0]) { itemPrizeSum += prizes.p1; wins.push("1st"); }
             if(found[1] && i.p === "ABC" && i.n === found[1]) { itemPrizeSum += prizes.p2; wins.push("2nd"); }
@@ -1023,28 +1001,23 @@
             if(found[3] && i.p === "ABC" && i.n === found[3]) { itemPrizeSum += prizes.p4; wins.push("4th"); }
             if(found[4] && i.p === "ABC" && i.n === found[4]) { itemPrizeSum += prizes.p5; wins.push("5th"); }
             for(let k = 5; k < found.length; k++) if(i.p === "ABC" && i.n === found[k]) { itemPrizeSum += prizes.p6; wins.push("6th+"); }
-            
             let sPrize = prizes.ps || 80;
             if(i.p === "A" && i.n === wA) { itemPrizeSum += sPrize; wins.push("A"); }
             if(i.p === "B" && i.n === wB) { itemPrizeSum += sPrize; wins.push("B"); }
             if(i.p === "C" && i.n === wC) { itemPrizeSum += sPrize; wins.push("C"); }
-            
             if(itemPrizeSum > 0) {
                 let key = `${i.n}-${i.p}`; 
                 if(!mergedWinners[key]) mergedWinners[key] = { n: i.n, p: i.p, totalCount: 0, prizePerUnit: itemPrizeSum, winTypes: wins };
                 mergedWinners[key].totalCount += i.c;
             }
         });
-
         let repArr = [];
         for (let key in mergedWinners) {
             let win = mergedWinners[key], lineAmount = win.totalCount * win.prizePerUnit;
             repArr.push(`🌟 ${win.n} (${win.p}) × ${win.totalCount} × ${win.prizePerUnit} = ${lineAmount}`);
             totalWinAmount += lineAmount;
         }
-
         lastWinDetails = `🏆 *WIN REPORT* 🏆\n\n${repArr.join("\n")}\n\n------------------\n*History Total Tickets: ${historyTotalTickets}*\n*Total Win Amount: ₹${totalWinAmount}*`;
-        
         document.getElementById("winDisplay").classList.remove("hidden");
         document.getElementById("winContent").innerText = repArr.join("\n") || "No Winners Found";
         document.getElementById("totalWinAmount").innerHTML = `H-Total: ${historyTotalTickets} | Win: ₹${totalWinAmount}`;
@@ -1069,21 +1042,14 @@
 
     function clearAllHistory() {
         if(confirm("ഹിസ്റ്ററി, വിന്നിംഗ് റിപ്പോർട്ട്, സേവ് ചെയ്ത റിസൾട്ടുകൾ എന്നിവ പൂർണ്ണമായും ക്ലിയർ ചെയ്യട്ടെ?")) {
-            permanent = [];
-            localStorage.setItem("perm_list", "[]");
-            savedResults = {};
-            localStorage.setItem("saved_results", "{}");
-            recentSessions = [];
-            localStorage.setItem("recent_sessions", "[]");
+            permanent = []; localStorage.setItem("perm_list", "[]");
+            savedResults = {}; localStorage.setItem("saved_results", "{}");
+            recentSessions = []; localStorage.setItem("recent_sessions", "[]");
             document.getElementById("winningPaste").value = "";
             document.getElementById("winContent").innerText = "";
             document.getElementById("totalWinAmount").innerText = "₹0";
             document.getElementById("winDisplay").classList.add("hidden");
-            lastWinDetails = "";
-            renderSaved();
-            renderResultHistory();
-            updateResultDropdown();
-            showToast("എല്ലാം പൂർണ്ണമായും ക്ലിയർ ചെയ്തു! 🗑️");
+            lastWinDetails = ""; renderSaved(); renderResultHistory(); updateResultDropdown(); showToast("എല്ലാം പൂർണ്ണമായും ക്ലിയർ ചെയ്തു! 🗑️");
         }
     }
     
@@ -1116,13 +1082,11 @@
         let text = textArea.value.toLowerCase();
         let tokens = text.match(/[a-z]+|\d+/g);
         if (!tokens) return;
-        let foundAny = false;
-        let mergeEnabled = document.getElementById("mainMergeToggle").checked;
+        let foundAny = false, mergeEnabled = document.getElementById("mainMergeToggle").checked;
         for (let i = 0; i < tokens.length; i++) {
             let current = tokens[i];
             if (/^\d{3}$/.test(current)) {
-                let num = current, count = 1, isBox = false;
-                let j = i + 1;
+                let num = current, count = 1, isBox = false, j = i + 1;
                 while (j < tokens.length) {
                     let next = tokens[j];
                     if (next === "box" || next === "bx") { isBox = true; j++; } 
