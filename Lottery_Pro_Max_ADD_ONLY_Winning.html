@@ -1080,46 +1080,69 @@
     function processSmartPaste() {
         let textArea = document.getElementById("smartPaste");
         let text = textArea.value.toLowerCase();
-        let tokens = text.match(/[a-z]+|\d+/g);
-        if (!tokens) return;
+        let lines = text.split('\n');
         let foundAny = false, mergeEnabled = document.getElementById("mainMergeToggle").checked;
-        for (let i = 0; i < tokens.length; i++) {
-            let current = tokens[i];
-            if (/^\d{3}$/.test(current)) {
-                let num = current, count = 1, isBox = false, j = i + 1;
-                while (j < tokens.length) {
-                    let next = tokens[j];
-                    if (next === "box" || next === "bx") { isBox = true; j++; } 
-                    else if (/^\d+$/.test(next)) {
-                        if (next.length === 3) break; 
-                        else { count = parseInt(next); j++; break; }
-                    } else break; 
+
+        lines.forEach(line => {
+            line = line.trim();
+            if (!line) return;
+
+            // Check for '=' format: 052 = 100
+            if (line.includes('=')) {
+                let parts = line.split('=');
+                let numMatch = parts[0].match(/\d{3}/);
+                let countMatch = parts[1].match(/\d+/);
+
+                if (numMatch && countMatch) {
+                    addProcessedEntry("ABC", numMatch[0], parseInt(countMatch[0]), mergeEnabled);
+                    foundAny = true;
+                    return; 
                 }
-                i = j - 1;
-                if (isBox) {
-                    let s = num.split(''), combinations = [];
-                    for(let x=0; x<3; x++) for(let y=0; y<3; y++) for(let z=0; z<3; z++) if(x!==y && y!==z && x!==z) combinations.push(s[x]+s[y]+s[z]);
-                    [...new Set(combinations)].forEach(bxNum => {
-                        let merged = false;
-                        if(mergeEnabled) {
-                            let idx = customers[activeIndex].temp.findIndex(item => item.p === "ABC" && item.n === bxNum);
-                            if(idx > -1) { customers[activeIndex].temp[idx].c += count; merged = true; }
-                        }
-                        if(!merged) customers[activeIndex].temp.unshift({ p: "ABC", n: bxNum, c: count, time: Date.now() });
-                    });
-                } else {
-                    let merged = false;
-                    if(mergeEnabled) {
-                        let idx = customers[activeIndex].temp.findIndex(item => item.p === "ABC" && item.n === num);
-                        if(idx > -1) { customers[activeIndex].temp[idx].c += count; merged = true; }
-                    }
-                    if(!merged) customers[activeIndex].temp.unshift({ p: "ABC", n: num, c: count, time: Date.now() });
-                }
-                foundAny = true;
             }
-        }
+
+            // Normal format: 323 422... or 123box 5
+            let tokens = line.match(/[a-z]+|\d+/g);
+            if (!tokens) return;
+
+            for (let i = 0; i < tokens.length; i++) {
+                let current = tokens[i];
+                if (/^\d{3}$/.test(current)) {
+                    let num = current, count = 1, isBox = false, j = i + 1;
+                    while (j < tokens.length) {
+                        let next = tokens[j];
+                        if (next === "box" || next === "bx") { isBox = true; j++; } 
+                        else if (/^\d+$/.test(next)) {
+                            if (next.length === 3) break; 
+                            else { count = parseInt(next); j++; break; }
+                        } else break;
+                    }
+                    i = j - 1;
+
+                    if (isBox) {
+                        let s = num.split(''), combinations = [];
+                        for(let x=0; x<3; x++) for(let y=0; y<3; y++) for(let z=0; z<3; z++) if(x!==y && y!==z && x!==z) combinations.push(s[x]+s[y]+s[z]);
+                        [...new Set(combinations)].forEach(bxNum => {
+                            addProcessedEntry("ABC", bxNum, count, mergeEnabled);
+                        });
+                    } else {
+                        addProcessedEntry("ABC", num, count, mergeEnabled);
+                    }
+                    foundAny = true;
+                }
+            }
+        });
+
         if(foundAny) { textArea.value = ""; closeModals(); renderLive(); save(); showToast("Smart Data Added!"); } 
         else showToast("നമ്പറുകൾ ഒന്നും കണ്ടെത്തിയില്ല!"); 
+    }
+
+    function addProcessedEntry(pos, num, count, mergeEnabled) {
+        let merged = false;
+        if(mergeEnabled) {
+            let idx = customers[activeIndex].temp.findIndex(item => item.p === pos && item.n === num);
+            if(idx > -1) { customers[activeIndex].temp[idx].c += count; merged = true; }
+        }
+        if(!merged) customers[activeIndex].temp.unshift({ p: pos, n: num, c: count, time: Date.now() });
     }
 
     function shareWinningList() { window.location.href = "whatsapp://send?text=" + encodeURIComponent(lastWinDetails); }
