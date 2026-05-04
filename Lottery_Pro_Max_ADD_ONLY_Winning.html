@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Lottery Pro Max - Safe Box Edition</title>
+<title>Lottery Pro Max - Profit & Loss Edition</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Noto+Sans+Malayalam:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
@@ -315,7 +315,7 @@
         <button class="btn-s" style="width:100%" onclick="checkWinners()">CHECK WINNERS</button>
         <div id="winDisplay" class="hidden" style="background:rgba(3,218,198,0.1); padding:15px; border-radius:15px; margin-top:10px; border:1px solid var(--secondary);">
             <div id="winContent" style="white-space:pre-wrap; font-family:monospace; font-size:12px;"></div>
-            <div style="font-weight:bold; margin-top:10px; color:var(--secondary);">Total: <span id="totalWinAmount" style="font-family:'Orbitron'">₹0</span></div>
+            <div id="totalWinAmount" style="font-weight:bold; margin-top:10px; color:var(--secondary); font-family:'Orbitron'; font-size: 12px;">Win: ₹0</div>
             <div style="display:flex; gap:5px; margin-top:10px;">
                 <button class="btn-s" onclick="shareWinningList()" style="flex:1; background:#25D366">WhatsApp</button>
                 <button class="btn-p" onclick="copyWinningList()" style="flex:1">Copy</button>
@@ -362,7 +362,7 @@
             <div class="theme-circle" style="background:#00cec9;" onclick="setTheme('theme-cyan')"></div>
             <div class="theme-circle" style="background:#9b59b6;" onclick="setTheme('theme-royal')"></div>
         </div>
-        <label style="font-size: 12px; color:var(--text-dim)">PRIZE LIST (ABC)</label>
+        <label style="font-size: 12px; color:var(--text-dim)">PRIZE LIST (ABC) & TICKET RATE</label>
         <div class="price-grid">
             <div class="price-input-box"><label>1st</label><input type="number" id="prz1" value="5400"></div>
             <div class="price-input-box"><label>2nd</label><input type="number" id="prz2" value="550"></div>
@@ -371,6 +371,7 @@
             <div class="price-input-box"><label>5th</label><input type="number" id="prz5" value="80"></div>
             <div class="price-input-box"><label>6th+</label><input type="number" id="prz6" value="35"></div>
             <div class="price-input-box"><label>Single (A/B/C)</label><input type="number" id="przS" value="80"></div>
+            <div class="price-input-box" style="border: 1px solid var(--secondary); border-radius: 8px;"><label style="color:var(--secondary)">Ticket Rate ₹</label><input type="number" id="tktRate" value="10"></div>
         </div>
         <div style="display:flex; justify-content:space-between; margin:15px 0;">
             <span>Merge Duplicates</span>
@@ -410,7 +411,7 @@
     let permanent = JSON.parse(localStorage.getItem("perm_list")) || [];
     let savedResults = JSON.parse(localStorage.getItem("saved_results")) || {};
     let recentSessions = JSON.parse(localStorage.getItem("recent_sessions")) || [];
-    let prizes = JSON.parse(localStorage.getItem("lottery_prizes")) || { p1:5400, p2:550, p3:270, p4:120, p5:80, p6:35, ps:80 };
+    let prizes = JSON.parse(localStorage.getItem("lottery_prizes")) || { p1:5400, p2:550, p3:270, p4:120, p5:80, p6:35, ps:80, rate: 10 };
     let currentInputId = 'num';
     let isNewInput = false;
     let lastDeletedData = null;
@@ -844,6 +845,7 @@
         document.getElementById("prz5").value = prizes.p5;
         document.getElementById("prz6").value = prizes.p6;
         document.getElementById("przS").value = prizes.ps || 80;
+        document.getElementById("tktRate").value = prizes.rate || 10;
     }
 
     function saveSettings() { 
@@ -855,6 +857,7 @@
         prizes.p5 = parseInt(document.getElementById("prz5").value);
         prizes.p6 = parseInt(document.getElementById("prz6").value);
         prizes.ps = parseInt(document.getElementById("przS").value);
+        prizes.rate = parseInt(document.getElementById("tktRate").value) || 10;
         localStorage.setItem("lottery_prizes", JSON.stringify(prizes));
         closeModals(); showToast("Settings Saved!"); 
     }
@@ -987,42 +990,94 @@
         document.getElementById("stepStart").value = ""; document.getElementById("stepEnd").value = ""; document.getElementById("stepCount").value = "";
     }
 
-    function checkWinners() {
+            function checkWinners() {
         let winText = document.getElementById("winningPaste").value;
         let found = winText.match(/\d{3}/g);
-        if(!found || found.length === 0) return;
-        let first = found[0], wA = first[0], wB = first[1], wC = first[2], totalWinAmount = 0, historyTotalTickets = 0, mergedWinners = {};
+        if(!found || found.length === 0) {
+            showToast("റിസൾട്ട് നമ്പറുകൾ കണ്ടെത്തിയില്ല!");
+            return;
+        }
+
+        let first = found[0]; 
+        let wA = first[0], wB = first[1], wC = first[2]; 
+
+        let totalWinAmount = 0;
+        let historyTotalTickets = 0;
+        let winnersMap = {}; // Merge ചെയ്യാനായി ഉപയോഗിക്കുന്നു
+
+        // സമ്മാനങ്ങളുടെ ഓർഡർ നിശ്ചയിക്കുന്നു
+        const prizeOrder = { "1st": 1, "2nd": 2, "3rd": 3, "4th": 4, "5th": 5, "6th+": 6, "A": 7, "B": 8, "C": 9, "AB": 10, "BC": 11, "AC": 12 };
+
         permanent.forEach(i => {
             historyTotalTickets += i.c; 
-            let itemPrizeSum = 0, wins = [];
-            if(i.p === "ABC" && i.n === found[0]) { itemPrizeSum += prizes.p1; wins.push("1st"); }
-            if(found[1] && i.p === "ABC" && i.n === found[1]) { itemPrizeSum += prizes.p2; wins.push("2nd"); }
-            if(found[2] && i.p === "ABC" && i.n === found[2]) { itemPrizeSum += prizes.p3; wins.push("3rd"); }
-            if(found[3] && i.p === "ABC" && i.n === found[3]) { itemPrizeSum += prizes.p4; wins.push("4th"); }
-            if(found[4] && i.p === "ABC" && i.n === found[4]) { itemPrizeSum += prizes.p5; wins.push("5th"); }
-            for(let k = 5; k < found.length; k++) if(i.p === "ABC" && i.n === found[k]) { itemPrizeSum += prizes.p6; wins.push("6th+"); }
-            let sPrize = prizes.ps || 80;
-            if(i.p === "A" && i.n === wA) { itemPrizeSum += sPrize; wins.push("A"); }
-            if(i.p === "B" && i.n === wB) { itemPrizeSum += sPrize; wins.push("B"); }
-            if(i.p === "C" && i.n === wC) { itemPrizeSum += sPrize; wins.push("C"); }
-            if(itemPrizeSum > 0) {
-                let key = `${i.n}-${i.p}`; 
-                if(!mergedWinners[key]) mergedWinners[key] = { n: i.n, p: i.p, totalCount: 0, prizePerUnit: itemPrizeSum, winTypes: wins };
-                mergedWinners[key].totalCount += i.c;
+            let prizePerUnit = 0;
+            let type = "";
+
+            // Winner Logic
+            if(i.p === "ABC") {
+                if(i.n === found[0]) { prizePerUnit = prizes.p1; type = "1st"; }
+                else if(found[1] && i.n === found[1]) { prizePerUnit = prizes.p2; type = "2nd"; }
+                else if(found[2] && i.n === found[2]) { prizePerUnit = prizes.p3; type = "3rd"; }
+                else if(found[3] && i.n === found[3]) { prizePerUnit = prizes.p4; type = "4th"; }
+                else if(found[4] && i.n === found[4]) { prizePerUnit = prizes.p5; type = "5th"; }
+                else {
+                    for(let k = 5; k < found.length; k++) {
+                        if(i.n === found[k]) { prizePerUnit = prizes.p6; type = "6th+"; break; }
+                    }
+                }
+            } else {
+                let sPrize = prizes.ps || 80;
+                if(i.p === "A" && i.n === wA) { prizePerUnit = sPrize; type = "A"; }
+                else if(i.p === "B" && i.n === wB) { prizePerUnit = sPrize; type = "B"; }
+                else if(i.p === "C" && i.n === wC) { prizePerUnit = sPrize; type = "C"; }
+                else if(i.p === "AB" && i.n === wA+wB) { prizePerUnit = sPrize * 2; type = "AB"; }
+                else if(i.p === "BC" && i.n === wB+wC) { prizePerUnit = sPrize * 2; type = "BC"; }
+                else if(i.p === "AC" && i.n === wA+wC) { prizePerUnit = sPrize * 2; type = "AC"; }
+            }
+
+            if(prizePerUnit > 0) {
+                // കീ ആയി നമ്പറും ടൈപ്പും ഉപയോഗിക്കുന്നു (ഉദാ: "123-1st")
+                let key = i.n + "-" + type;
+                if(!winnersMap[key]) {
+                    winnersMap[key] = { n: i.n, p: i.p, type: type, count: 0, prize: prizePerUnit, order: prizeOrder[type] || 99 };
+                }
+                winnersMap[key].count += i.c;
             }
         });
-        let repArr = [];
-        for (let key in mergedWinners) {
-            let win = mergedWinners[key], lineAmount = win.totalCount * win.prizePerUnit;
-            repArr.push(`🌟 ${win.n} (${win.p}) × ${win.totalCount} × ${win.prizePerUnit} = ${lineAmount}`);
-            totalWinAmount += lineAmount;
-        }
-        lastWinDetails = `🏆 *WIN REPORT* 🏆\n\n${repArr.join("\n")}\n\n------------------\n*History Total Tickets: ${historyTotalTickets}*\n*Total Win Amount: ₹${totalWinAmount}*`;
+
+        // സോർട്ടിംഗ് (1st, 2nd.. എന്ന ക്രമത്തിൽ)
+        let sortedWinners = Object.values(winnersMap).sort((a, b) => a.order - b.order);
+
+        let reportLines = [];
+        sortedWinners.forEach(w => {
+            let lineTotal = w.count * w.prize;
+            totalWinAmount += lineTotal;
+            // ABC ഒഴിവാക്കി ബാക്കിയുള്ള പൊസിഷനുകൾ മാത്രം കാണിക്കുന്നു
+            let posLabel = (w.p === "ABC") ? "" : `(${w.p})`;
+            reportLines.push(`🌟 ${w.n} ${posLabel} [${w.type}] × ${w.count} = ₹${lineTotal}`);
+        });
+
+        let ticketRate = prizes.rate || 10;
+        let totalCost = historyTotalTickets * ticketRate;
+        let balance = totalWinAmount - totalCost;
+        let status = balance >= 0 ? "PROFIT" : "LOSS";
+
+        lastWinDetails = `🏆 *WIN REPORT* 🏆\n\n` +
+                         (reportLines.length > 0 ? reportLines.join("\n") : "No Winners Found") +
+                         `\n\n------------------\n` +
+                         `Total Tickets: ${historyTotalTickets}\n` +
+                         `Total Cost: ₹${totalCost}\n` +
+                         `Total Win: ₹${totalWinAmount}\n` +
+                         `------------------\n` +
+                         `*NET ${status}: ₹${Math.abs(balance)}*`;
+
         document.getElementById("winDisplay").classList.remove("hidden");
-        document.getElementById("winContent").innerText = repArr.join("\n") || "No Winners Found";
-        document.getElementById("totalWinAmount").innerHTML = `H-Total: ${historyTotalTickets} | Win: ₹${totalWinAmount}`;
-        showToast("Winners Checked!");
+        document.getElementById("winContent").innerText = reportLines.join("\n") || "No Winners Found";
+        document.getElementById("totalWinAmount").innerHTML = `Win: ₹${totalWinAmount} | Net: ₹${balance}`;
+        showToast("റിപ്പോർട്ട് തയ്യാറായി!");
     }
+
+
 
     async function copyWinningList() { 
         try { if (!lastWinDetails) return; await navigator.clipboard.writeText(lastWinDetails); showToast("Copied!"); } 
@@ -1078,63 +1133,70 @@
     }
     
     function processSmartPaste() {
-        let textArea = document.getElementById("smartPaste");
-        let text = textArea.value.toLowerCase();
-        let lines = text.split('\n');
-        let foundAny = false, mergeEnabled = document.getElementById("mainMergeToggle").checked;
+    let textArea = document.getElementById("smartPaste");
+    let text = textArea.value.toLowerCase();
+    let lines = text.split('\n');
+    let foundAny = false, mergeEnabled = document.getElementById("mainMergeToggle").checked;
 
-        lines.forEach(line => {
-            line = line.trim();
-            if (!line) return;
+    lines.forEach(line => {
+        line = line.trim();
+        // വരിയിൽ total, gt, tot എന്നീ വാക്കുകൾ ഉണ്ടെങ്കിൽ അത് സ്കിപ്പ് ചെയ്യുക
+        if (!line || line.includes('total') || line.includes('gt') || line.includes('tot')) return;
 
-            // Check for '=' format: 052 = 100
-            if (line.includes('=')) {
-                let parts = line.split('=');
-                let numMatch = parts[0].match(/\d{3}/);
-                let countMatch = parts[1].match(/\d+/);
+        if (line.includes('=')) {
+            let parts = line.split('=');
+            let numMatch = parts[0].match(/\d{3}/);
+            let countMatch = parts[1].match(/\d+/);
 
-                if (numMatch && countMatch) {
-                    addProcessedEntry("ABC", numMatch[0], parseInt(countMatch[0]), mergeEnabled);
-                    foundAny = true;
-                    return; 
-                }
+            if (numMatch && countMatch) {
+                addProcessedEntry("ABC", numMatch[0], parseInt(countMatch[0]), mergeEnabled);
+                foundAny = true;
+                return; 
             }
+        }
 
-            // Normal format: 323 422... or 123box 5
-            let tokens = line.match(/[a-z]+|\d+/g);
-            if (!tokens) return;
+        let tokens = line.match(/[a-z]+|\d+/g);
+        if (!tokens) return;
 
-            for (let i = 0; i < tokens.length; i++) {
-                let current = tokens[i];
-                if (/^\d{3}$/.test(current)) {
-                    let num = current, count = 1, isBox = false, j = i + 1;
-                    while (j < tokens.length) {
-                        let next = tokens[j];
-                        if (next === "box" || next === "bx") { isBox = true; j++; } 
-                        else if (/^\d+$/.test(next)) {
-                            if (next.length === 3) break; 
-                            else { count = parseInt(next); j++; break; }
-                        } else break;
-                    }
-                    i = j - 1;
-
-                    if (isBox) {
-                        let s = num.split(''), combinations = [];
-                        for(let x=0; x<3; x++) for(let y=0; y<3; y++) for(let z=0; z<3; z++) if(x!==y && y!==z && x!==z) combinations.push(s[x]+s[y]+s[z]);
-                        [...new Set(combinations)].forEach(bxNum => {
-                            addProcessedEntry("ABC", bxNum, count, mergeEnabled);
-                        });
-                    } else {
-                        addProcessedEntry("ABC", num, count, mergeEnabled);
-                    }
-                    foundAny = true;
+        for (let i = 0; i < tokens.length; i++) {
+            let current = tokens[i];
+            if (/^\d{3}$/.test(current)) {
+                let num = current, count = 1, isBox = false, j = i + 1;
+                while (j < tokens.length) {
+                    let next = tokens[j];
+                    if (next === "box" || next === "bx") { isBox = true; j++; } 
+                    else if (/^\d+$/.test(next)) {
+                        if (next.length === 3) break; 
+                        else { count = parseInt(next); j++; break; }
+                    } else break;
                 }
-            }
-        });
+                i = j - 1;
 
-        if(foundAny) { textArea.value = ""; closeModals(); renderLive(); save(); showToast("Smart Data Added!"); } 
-        else showToast("നമ്പറുകൾ ഒന്നും കണ്ടെത്തിയില്ല!"); 
+                if (isBox) {
+                    let s = num.split(''), combinations = [];
+                    for(let x=0; x<3; x++) for(let y=0; y<3; y++) for(let z=0; z<3; z++) if(x!==y && y!==z && x!==z) combinations.push(s[x]+s[y]+s[z]);
+                    [...new Set(combinations)].forEach(bxNum => {
+                        addProcessedEntry("ABC", bxNum, count, mergeEnabled);
+                    });
+                } else {
+                    addProcessedEntry("ABC", num, count, mergeEnabled);
+                }
+                foundAny = true;
+            }
+        }
+    });
+
+    if(foundAny) { 
+        textArea.value = ""; 
+        closeModals(); 
+        renderLive(); 
+        save(); 
+        showToast("Smart Data Added!"); 
+    } else {
+        showToast("നമ്പറുകൾ ഒന്നും കണ്ടെത്തിയില്ല!"); 
     }
+}
+
 
     function addProcessedEntry(pos, num, count, mergeEnabled) {
         let merged = false;
