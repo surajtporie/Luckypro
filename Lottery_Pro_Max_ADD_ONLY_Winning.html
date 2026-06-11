@@ -1134,15 +1134,28 @@
     
     function processSmartPaste() {
     let textArea = document.getElementById("smartPaste");
-    let text = textArea.value.toLowerCase();
+    let text = textArea.value;
     let lines = text.split('\n');
     let foundAny = false, mergeEnabled = document.getElementById("mainMergeToggle").checked;
 
     lines.forEach(line => {
-        line = line.trim();
+        line = line.trim().toLowerCase();
+        
+        // 1. വാട്സാപ്പ് സമയവും കോൺടാക്റ്റ് പേരും (ഉദാ: [6/11, 4:59 PM] New Numbr:) ഉണ്ടെങ്കിൽ അത് നീക്കം ചെയ്യുന്നു
+        if (line.includes(']')) {
+            let parts = line.split(']');
+            line = parts[1] ? parts[1].trim() : line;
+        }
+        // വരിയിൽ വീണ്ടും പേര് ബാക്കിയുണ്ടെങ്കിൽ (ഉദാ: new numbr:) അതും കളയുന്നു
+        if (line.includes(':')) {
+            let parts = line.split(':');
+            line = parts[1] ? parts[1].trim() : line;
+        }
+
         // വരിയിൽ total, gt, tot എന്നീ വാക്കുകൾ ഉണ്ടെങ്കിൽ അത് സ്കിപ്പ് ചെയ്യുക
         if (!line || line.includes('total') || line.includes('gt') || line.includes('tot')) return;
 
+        // 2. സമചിഹ്നം (=) ഉള്ള വരികൾ പ്രോസസ്സ് ചെയ്യുന്നു
         if (line.includes('=')) {
             let parts = line.split('=');
             let numMatch = parts[0].match(/\d{3}/);
@@ -1155,6 +1168,7 @@
             }
         }
 
+        // 3. സ്പേസ്, കോമ, ഡോട്ട് എന്നിവയുള്ള മറ്റ് വരികൾ പ്രോസസ്സ് ചെയ്യുന്നു
         let tokens = line.match(/[a-z]+|\d+/g);
         if (!tokens) return;
 
@@ -1196,6 +1210,7 @@
         showToast("നമ്പറുകൾ ഒന്നും കണ്ടെത്തിയില്ല!"); 
     }
 }
+
 
 
     function addProcessedEntry(pos, num, count, mergeEnabled) {
