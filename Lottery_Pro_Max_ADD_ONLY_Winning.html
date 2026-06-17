@@ -744,39 +744,73 @@
     }
 
     function openRecentModal() {
-        let h = "";
-        if (recentSessions.length === 0) h = "<p style='text-align:center; padding:20px;'>No Recent History Found</p>";
-        else {
-            recentSessions.forEach(session => {
-                let total = session.data.reduce((sum, item) => sum + item.c, 0);
-                h += `<div class="recent-block">
-                        <div class="recent-time">${session.time} | <span style="color:var(--primary)">${session.type}</span></div>
-                        <div style="font-weight:bold; margin-bottom:5px; color:var(--secondary)">Name: ${session.name}</div>
-                        <div style="max-height:150px; overflow-y:auto; font-size:12px; background:rgba(0,0,0,0.2); padding:8px; border-radius:10px;">
-                            ${session.data.map(i => `${i.p} ${i.n} = ${i.c}`).join("<br>")}
-                        </div>
-                        <div style="text-align:right; font-weight:bold; margin-top:5px; color:var(--primary)">Total: ${total}</div>
-                        <button class="btn-s" style="width:100%; margin-top:8px; font-size:10px; padding:5px;" onclick="restoreRecent(${session.id})">RESTORE TO CURRENT PAGE</button>
-                      </div>`;
-            });
-        }
-        document.getElementById("recentContentList").innerHTML = h;
-        document.getElementById("recentModal").classList.add("flex");
+    let h = "";
+    if (recentSessions.length === 0) h = "<p style='text-align:center; padding:20px;'>No Recent History Found</p>";
+    else {
+        recentSessions.forEach(session => {
+            let total = session.data.reduce((sum, item) => sum + item.c, 0);
+            
+            let isFullBackup = (session.name === "FULL HISTORY BACKUP");
+            let buttonText = isFullBackup ? "⏳ RESTORE FULL HISTORY BACK TO SAVED PAGE" : "RESTORE TO CURRENT PAGE";
+            let buttonStyle = isFullBackup ? "background:#2ecc71; color:black; font-weight:bold; border:1px solid white;" : "";
+
+            h += `<div class="recent-block" style="border-bottom:1px solid #444; padding:10px 0;">
+                    <div class="recent-time">${session.time} | <span style="color:var(--primary)">${session.type}</span></div>
+                    <div style="font-weight:bold; margin-bottom:5px; color:var(--secondary)">Name: ${session.name}</div>
+                    <div style="max-height:150px; overflow-y:auto; font-size:12px; background:rgba(0,0,0,0.2); padding:8px; border-radius:10px;">
+                        ${session.data.map(i => `${i.p} ${i.n} = ${i.c}`).join("<br>")}
+                    </div>
+                    <div style="text-align:right; font-weight:bold; margin-top:5px; color:var(--primary)">Total: ${total}</div>
+                    
+                    <button class="btn-s" style="width:100%; margin-top:8px; font-size:11px; padding:8px; ${buttonStyle}" onclick="restoreRecent(${session.id})">${buttonText}</button>
+                  </div>`;
+        });
     }
+    document.getElementById("recentContentList").innerHTML = h;
+    document.getElementById("recentModal").classList.add("flex");
+}
+
+
+
 
     function restoreRecent(id) {
-        let session = recentSessions.find(s => s.id === id);
-        if(session) {
-            if(confirm("ഈ ഡാറ്റ നിലവിലെ പേജിലേക്ക് മാറ്റട്ടെ?")) {
+    let session = recentSessions.find(s => s.id === id);
+    if(!session) {
+        alert("ഡാറ്റ കണ്ടെത്താൻ കഴിഞ്ഞില്ല!");
+        return;
+    }
+
+    // ഇത് ഫുൾ ഹിസ്റ്ററി ബാക്കപ്പ് ആണോ എന്ന് നോക്കുന്നു
+    if(session.name === "FULL HISTORY BACKUP") {
+        if(confirm("ഈ ഫുൾ ഡാറ്റ തിരികെ Saved History പേജിലേക്ക് മാറ്റട്ടെ?")) {
+            permanent = [...session.data];
+            localStorage.setItem("perm_list", JSON.stringify(permanent));
+            
+            // ഹിസ്റ്ററി ടേബിളും ലിസ്റ്റും റീഫ്രെഷ് ചെയ്യുന്നു
+            if (typeof renderSaved === "function") renderSaved();
+            if (typeof renderResultHistory === "function") renderResultHistory();
+            
+            document.getElementById("recentModal").classList.remove("flex");
+            showToast("മുഴുവൻ ഹിസ്റ്ററിയും വിജയകരമായി തിരികെ എടുത്തു! 🎉");
+        }
+    } else {
+        // സാധാരണ സിംഗിൾ കസ്റ്റമർ പേജ് റീസ്റ്റോർ ചെയ്യാനുള്ള പഴയ കോഡ്
+        if(confirm("ഈ ഡാറ്റ നിലവിലെ കസ്റ്റമർ പേജിലേക്ക് മാറ്റട്ടെ?")) {
+            if(typeof activeIndex !== 'undefined' && customers[activeIndex]) {
                 customers[activeIndex].temp = [...session.data];
                 customers[activeIndex].name = session.name;
                 document.getElementById("customer").value = session.name;
-                renderTabs(); save();
+                if (typeof renderTabs === "function") renderTabs();
+                if (typeof save === "function") save();
                 document.getElementById("recentModal").classList.remove("flex");
-                showToast("Data Restored!");
+                showToast("ഡാറ്റ റീസ്റ്റോർ ചെയ്തു!");
+            } else {
+                alert("കറന്റ് കസ്റ്റമർ ടാബ് ആക്ടീവ് അല്ല!");
             }
         }
     }
+}
+
 
     function clearRecentHistory() {
         if(confirm("പഴയ എല്ലാ ഹിസ്റ്ററിയും ക്ലിയർ ചെയ്യട്ടെ?")) {
@@ -1096,17 +1130,24 @@
     }
 
     function clearAllHistory() {
-        if(confirm("ഹിസ്റ്ററി, വിന്നിംഗ് റിപ്പോർട്ട്, സേവ് ചെയ്ത റിസൾട്ടുകൾ എന്നിവ പൂർണ്ണമായും ക്ലിയർ ചെയ്യട്ടെ?")) {
-            permanent = []; localStorage.setItem("perm_list", "[]");
-            savedResults = {}; localStorage.setItem("saved_results", "{}");
-            recentSessions = []; localStorage.setItem("recent_sessions", "[]");
-            document.getElementById("winningPaste").value = "";
-            document.getElementById("winContent").innerText = "";
-            document.getElementById("totalWinAmount").innerText = "₹0";
-            document.getElementById("winDisplay").classList.add("hidden");
-            lastWinDetails = ""; renderSaved(); renderResultHistory(); updateResultDropdown(); showToast("എല്ലാം പൂർണ്ണമായും ക്ലിയർ ചെയ്തു! 🗑️");
+    if(confirm("ഹിസ്റ്ററി, വിന്നിംഗ് റിപ്പോർട്ട്, സേവ് ചെയ്ത റിസൾട്ടുകൾ എന്നിവ പൂർണ്ണമായും ക്ലിയർ ചെയ്യട്ടെ?")) {
+        // [CRITICAL UPDATE]: ക്ലിയർ ചെയ്യുന്ന ഫുൾ ഹിസ്റ്ററി ഡാറ്റയെ ഒരുമിച്ച് RECENT-ലേക്ക് മാറ്റുന്നു
+        if(permanent && permanent.length > 0) {
+            addToRecentSessions("FULL HISTORY BACKUP", [...permanent], "CLEARED");
         }
+
+        permanent = []; localStorage.setItem("perm_list", "[]");
+        savedResults = {}; localStorage.setItem("saved_results", "{}");
+        document.getElementById("winningPaste").value = "";
+        document.getElementById("winContent").innerText = "";
+        document.getElementById("totalWinAmount").innerText = "₹0";
+        document.getElementById("winDisplay").classList.add("hidden");
+        lastWinDetails = ""; 
+        renderSaved(); renderResultHistory(); updateResultDropdown(); 
+        showToast("എല്ലാം റീസെന്റ് ഹിസ്റ്ററിയിലേക്ക് മാറ്റി ക്ലിയർ ചെയ്തു! 🗑️");
     }
+}
+
     
     function shareMergedData() {
         let min = prompt("Min count?", "1"); if (min === null) return; min = parseInt(min) || 0;
@@ -1137,52 +1178,94 @@
     let text = textArea.value;
     let lines = text.split('\n');
     let foundAny = false, mergeEnabled = document.getElementById("mainMergeToggle").checked;
+    
+    let skipNextThreeDigit = false;
 
     lines.forEach(line => {
-        line = line.trim().toLowerCase();
+        let cleanLine = line.trim().toLowerCase();
+        if (!cleanLine) return;
+
+        if (cleanLine.includes('total') || 
+            cleanLine.includes('gt') || 
+            cleanLine.includes('tot') || 
+            cleanLine.includes('net') || 
+            cleanLine.includes('ਟোটਲ')) {
+            skipNextThreeDigit = true;
+        }
         
-        // 1. വാട്സാപ്പ് സമയവും കോൺടാക്റ്റ് പേരും (ഉദാ: [6/11, 4:59 PM] New Numbr:) ഉണ്ടെങ്കിൽ അത് നീക്കം ചെയ്യുന്നു
-        if (line.includes(']')) {
-            let parts = line.split(']');
-            line = parts[1] ? parts[1].trim() : line;
+        if (cleanLine.includes(']')) {
+            let parts = cleanLine.split(']');
+            cleanLine = parts[1] ? parts[1].trim() : cleanLine;
         }
-        // വരിയിൽ വീണ്ടും പേര് ബാക്കിയുണ്ടെങ്കിൽ (ഉദാ: new numbr:) അതും കളയുന്നു
-        if (line.includes(':')) {
-            let parts = line.split(':');
-            line = parts[1] ? parts[1].trim() : line;
+        if (cleanLine.includes(':')) {
+            let parts = cleanLine.split(':');
+            cleanLine = parts[1] ? parts[1].trim() : cleanLine;
         }
 
-        // വരിയിൽ total, gt, tot എന്നീ വാക്കുകൾ ഉണ്ടെങ്കിൽ അത് സ്കിപ്പ് ചെയ്യുക
-        if (!line || line.includes('total') || line.includes('gt') || line.includes('tot')) return;
-
-        // 2. സമചിഹ്നം (=) ഉള്ള വരികൾ പ്രോസസ്സ് ചെയ്യുന്നു
-        if (line.includes('=')) {
-            let parts = line.split('=');
+        // 1. സമചിഹ്നം (=) ഉള്ള വരികൾ (ഉദാഹരണം: 123box = 2 അല്ലെങ്കിൽ 123 = 5)
+        if (cleanLine.includes('=')) {
+            let parts = cleanLine.split('=');
             let numMatch = parts[0].match(/\d{3}/);
             let countMatch = parts[1].match(/\d+/);
 
             if (numMatch && countMatch) {
-                addProcessedEntry("ABC", numMatch[0], parseInt(countMatch[0]), mergeEnabled);
+                if (skipNextThreeDigit) {
+                    skipNextThreeDigit = false;
+                    return; 
+                }
+                
+                // സമചിഹ്നത്തിന് മുൻപുള്ള ഭാഗത്ത് box/bx ഉണ്ടോ എന്ന് നോക്കുന്നു
+                let isBox = parts[0].includes('box') || parts[0].includes('bx');
+                let num = numMatch[0];
+                let count = parseInt(countMatch[0]);
+
+                if (isBox) {
+                    let s = num.split(''), combinations = [];
+                    for(let x=0; x<3; x++) for(let y=0; y<3; y++) for(let z=0; z<3; z++) if(x!==y && y!==z && x!==z) combinations.push(s[x]+s[y]+s[z]);
+                    [...new Set(combinations)].forEach(bxNum => {
+                        addProcessedEntry("ABC", bxNum, count, mergeEnabled);
+                    });
+                } else {
+                    addProcessedEntry("ABC", num, count, mergeEnabled);
+                }
                 foundAny = true;
                 return; 
             }
         }
 
-        // 3. സ്പേസ്, കോമ, ഡോട്ട് എന്നിവയുള്ള മറ്റ് വരികൾ പ്രോസസ്സ് ചെയ്യുന്നു
-        let tokens = line.match(/[a-z]+|\d+/g);
+        // 2. സ്പേസ്, കോമ, അല്ലെങ്കിൽ ഒട്ടിപ്പിടിച്ചു വരുന്ന വരികൾ പ്രോസസ്സ് ചെയ്യുന്നു
+        // റെഗുലർ എക്സ്പ്രഷൻ മാറ്റി - അക്ഷരങ്ങളും അക്കങ്ങളും കൃത്യമായി വേർതിരിക്കുന്നു
+        let tokens = cleanLine.match(/[a-z]+|\d+/g);
         if (!tokens) return;
 
         for (let i = 0; i < tokens.length; i++) {
             let current = tokens[i];
+            
             if (/^\d{3}$/.test(current)) {
+                if (skipNextThreeDigit) {
+                    skipNextThreeDigit = false;
+                    continue; 
+                }
+
                 let num = current, count = 1, isBox = false, j = i + 1;
+                
+                // തൊട്ടടുത്ത ടോക്കണുകൾ പരിശോധിക്കുന്നു (ഉദാഹരണത്തിന്: [123, box, 2] അല്ലെങ്കിൽ [123, bx, 1])
                 while (j < tokens.length) {
                     let next = tokens[j];
-                    if (next === "box" || next === "bx") { isBox = true; j++; } 
+                    if (next === "box" || next === "bx") { 
+                        isBox = true; 
+                        j++; 
+                    } 
                     else if (/^\d+$/.test(next)) {
-                        if (next.length === 3) break; 
-                        else { count = parseInt(next); j++; break; }
-                    } else break;
+                        if (next.length === 3) break; // അടുത്ത ലോട്ടറി നമ്പർ ആണെങ്കിൽ ലൂപ്പ് നിർത്തുക
+                        else { 
+                            count = parseInt(next); 
+                            j++; 
+                            break; 
+                        }
+                    } else {
+                        j++;
+                    }
                 }
                 i = j - 1;
 
@@ -1210,8 +1293,6 @@
         showToast("നമ്പറുകൾ ഒന്നും കണ്ടെത്തിയില്ല!"); 
     }
 }
-
-
 
     function addProcessedEntry(pos, num, count, mergeEnabled) {
         let merged = false;
