@@ -1178,19 +1178,18 @@
     let text = textArea.value;
     let lines = text.split('\n');
     let foundAny = false, mergeEnabled = document.getElementById("mainMergeToggle").checked;
-    
-    let skipNextThreeDigit = false;
 
     lines.forEach(line => {
         let cleanLine = line.trim().toLowerCase();
         if (!cleanLine) return;
 
+        // ആകെ തുക കാണിക്കുന്ന വരികൾ (Total, GT, Tot) ഉണ്ടെങ്കിൽ ആ വരി പൂർണ്ണമായി ഒഴിവാക്കുന്നു
         if (cleanLine.includes('total') || 
             cleanLine.includes('gt') || 
             cleanLine.includes('tot') || 
             cleanLine.includes('net') || 
             cleanLine.includes('ਟোটਲ')) {
-            skipNextThreeDigit = true;
+            return; // ഈ വരിയിൽ അടുത്ത ലൂപ്പിലേക്ക് കടക്കുന്നു (തൊട്ടടുത്ത വരിയെ ബാധിക്കില്ല)
         }
         
         if (cleanLine.includes(']')) {
@@ -1209,12 +1208,6 @@
             let countMatch = parts[1].match(/\d+/);
 
             if (numMatch && countMatch) {
-                if (skipNextThreeDigit) {
-                    skipNextThreeDigit = false;
-                    return; 
-                }
-                
-                // സമചിഹ്നത്തിന് മുൻപുള്ള ഭാഗത്ത് box/bx ഉണ്ടോ എന്ന് നോക്കുന്നു
                 let isBox = parts[0].includes('box') || parts[0].includes('bx');
                 let num = numMatch[0];
                 let count = parseInt(countMatch[0]);
@@ -1234,7 +1227,6 @@
         }
 
         // 2. സ്പേസ്, കോമ, അല്ലെങ്കിൽ ഒട്ടിപ്പിടിച്ചു വരുന്ന വരികൾ പ്രോസസ്സ് ചെയ്യുന്നു
-        // റെഗുലർ എക്സ്പ്രഷൻ മാറ്റി - അക്ഷരങ്ങളും അക്കങ്ങളും കൃത്യമായി വേർതിരിക്കുന്നു
         let tokens = cleanLine.match(/[a-z]+|\d+/g);
         if (!tokens) return;
 
@@ -1242,14 +1234,8 @@
             let current = tokens[i];
             
             if (/^\d{3}$/.test(current)) {
-                if (skipNextThreeDigit) {
-                    skipNextThreeDigit = false;
-                    continue; 
-                }
-
                 let num = current, count = 1, isBox = false, j = i + 1;
                 
-                // തൊട്ടടുത്ത ടോക്കണുകൾ പരിശോധിക്കുന്നു (ഉദാഹരണത്തിന്: [123, box, 2] അല്ലെങ്കിൽ [123, bx, 1])
                 while (j < tokens.length) {
                     let next = tokens[j];
                     if (next === "box" || next === "bx") { 
@@ -1257,7 +1243,7 @@
                         j++; 
                     } 
                     else if (/^\d+$/.test(next)) {
-                        if (next.length === 3) break; // അടുത്ത ലോട്ടറി നമ്പർ ആണെങ്കിൽ ലൂപ്പ് നിർത്തുക
+                        if (next.length === 3) break; 
                         else { 
                             count = parseInt(next); 
                             j++; 
@@ -1293,6 +1279,7 @@
         showToast("നമ്പറുകൾ ഒന്നും കണ്ടെത്തിയില്ല!"); 
     }
 }
+
 
     function addProcessedEntry(pos, num, count, mergeEnabled) {
         let merged = false;
