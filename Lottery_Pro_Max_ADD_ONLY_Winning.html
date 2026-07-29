@@ -229,15 +229,19 @@
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px;">
-                <input id="customer" placeholder="Customer Name" oninput="updateTabName()" style="margin:0; flex: 1;">
+<input id="customer" placeholder="Customer Name" oninput="updateTabName()" onclick="setFocus('customer', event)" onkeyup="if(event.key === 'Enter' || event.keyCode === 13){ event.preventDefault(); setTimeout(() => setFocus('num'), 10); }" onblur="if(currentInputId === 'customer') { setTimeout(() => setFocus('num'), 10); }" style="margin:0; flex: 1;">
+
+
+
                 <div id="lastEntryLabel" class="last-entry-indicator"></div>
             </div>
             
             <div style="display: flex; gap: 8px;">
-                <select id="posSelect" style="flex: 1;">
-                    <option value="ABC">ABC</option><option value="A">A</option><option value="B">B</option><option value="C">C</option>
-                    <option value="AB">AB</option><option value="BC">BC</option><option value="AC">AC</option>
-                </select>
+                <select id="posSelect" tabindex="-1" style="flex: 1;">
+    <option value="ABC">ABC</option><option value="A">A</option><option value="B">B</option><option value="C">C</option>
+    <option value="AB">AB</option><option value="BC">BC</option><option value="AC">AC</option>
+</select>
+
                 <input id="num" placeholder="No" readonly onclick="setFocus('num', event)" style="flex: 1.5;">
                 <input id="count" placeholder="Count" readonly onclick="setFocus('count', event)" style="flex: 1.5;">
             </div>
@@ -607,12 +611,13 @@
         playSnd(0); 
     }
 
-    function handleEnter() {
+        function handleEnter() {
         if (isLongPress) { isLongPress = false; return; }
-        if(currentInputId === 'count') addEntry();
+        if(currentInputId === 'customer') setFocus('num');
+        else if(currentInputId === 'count') addEntry();
         else if(currentInputId === 'stepCount') processStep();
         else { 
-            let seq = ['num', 'count', 'stepStart', 'stepEnd', 'stepGap', 'stepCount'];
+            let seq = ['customer', 'num', 'count', 'stepStart', 'stepEnd', 'stepGap', 'stepCount'];
             let idx = seq.indexOf(currentInputId);
             if(idx > -1 && idx < seq.length - 1) setFocus(seq[idx+1]);
         }
@@ -1025,91 +1030,102 @@
     }
 
             function checkWinners() {
-        let winText = document.getElementById("winningPaste").value;
-        let found = winText.match(/\d{3}/g);
-        if(!found || found.length === 0) {
-            showToast("റിസൾട്ട് നമ്പറുകൾ കണ്ടെത്തിയില്ല!");
-            return;
-        }
+    let winText = document.getElementById("winningPaste").value;
+    let found = winText.match(/\d{3}/g);
+    if(!found || found.length === 0) {
+        showToast("റിസൾട്ട് നമ്പറുകൾ കണ്ടെത്തിയില്ല!");
+        return;
+    }
 
-        let first = found[0]; 
-        let wA = first[0], wB = first[1], wC = first[2]; 
+    let first = found[0]; 
+    let wA = first[0], wB = first[1], wC = first[2]; 
 
-        let totalWinAmount = 0;
-        let historyTotalTickets = 0;
-        let winnersMap = {}; // Merge ചെയ്യാനായി ഉപയോഗിക്കുന്നു
+    let totalWinAmount = 0;
+    let historyTotalTickets = 0;
+    let winnersMap = {}; // Merge ചെയ്യാനായി ഉപയോഗിക്കുന്നു
 
-        // സമ്മാനങ്ങളുടെ ഓർഡർ നിശ്ചയിക്കുന്നു
-        const prizeOrder = { "1st": 1, "2nd": 2, "3rd": 3, "4th": 4, "5th": 5, "6th+": 6, "A": 7, "B": 8, "C": 9, "AB": 10, "BC": 11, "AC": 12 };
+    // സമ്മാനങ്ങളുടെ ഓർഡർ നിശ്ചയിക്കുന്നു
+    const prizeOrder = { "1st": 1, "2nd": 2, "3rd": 3, "4th": 4, "5th": 5, "6th+": 6, "A": 7, "B": 8, "C": 9, "AB": 10, "BC": 11, "AC": 12 };
 
-        permanent.forEach(i => {
-            historyTotalTickets += i.c; 
+    permanent.forEach(i => {
+        historyTotalTickets += i.c; 
+
+        if(i.p === "ABC") {
+            // റിസൾട്ടിലെ എല്ലാ പ്രൈസ് നമ്പറുകളുമായും ഒത്തുനോക്കുന്നു (ഒരേ നമ്പർ തന്നെ വീണ്ടും വന്നാലും കണക്കാക്കും)
+            found.forEach((winningNum, idx) => {
+                if(i.n === winningNum) {
+                    let prizePerUnit = 0;
+                    let type = "";
+
+                    if(idx === 0) { prizePerUnit = prizes.p1; type = "1st"; }
+                    else if(idx === 1) { prizePerUnit = prizes.p2; type = "2nd"; }
+                    else if(idx === 2) { prizePerUnit = prizes.p3; type = "3rd"; }
+                    else if(idx === 3) { prizePerUnit = prizes.p4; type = "4th"; }
+                    else if(idx === 4) { prizePerUnit = prizes.p5; type = "5th"; }
+                    else { prizePerUnit = prizes.p6; type = "6th+"; }
+
+                    if(prizePerUnit > 0) {
+                        let key = i.n + "-" + type;
+                        if(!winnersMap[key]) {
+                            winnersMap[key] = { n: i.n, p: i.p, type: type, count: 0, prize: prizePerUnit, order: prizeOrder[type] || 99 };
+                        }
+                        winnersMap[key].count += i.c;
+                    }
+                }
+            });
+        } else {
+            let sPrize = prizes.ps || 80;
             let prizePerUnit = 0;
             let type = "";
 
-            // Winner Logic
-            if(i.p === "ABC") {
-                if(i.n === found[0]) { prizePerUnit = prizes.p1; type = "1st"; }
-                else if(found[1] && i.n === found[1]) { prizePerUnit = prizes.p2; type = "2nd"; }
-                else if(found[2] && i.n === found[2]) { prizePerUnit = prizes.p3; type = "3rd"; }
-                else if(found[3] && i.n === found[3]) { prizePerUnit = prizes.p4; type = "4th"; }
-                else if(found[4] && i.n === found[4]) { prizePerUnit = prizes.p5; type = "5th"; }
-                else {
-                    for(let k = 5; k < found.length; k++) {
-                        if(i.n === found[k]) { prizePerUnit = prizes.p6; type = "6th+"; break; }
-                    }
-                }
-            } else {
-                let sPrize = prizes.ps || 80;
-                if(i.p === "A" && i.n === wA) { prizePerUnit = sPrize; type = "A"; }
-                else if(i.p === "B" && i.n === wB) { prizePerUnit = sPrize; type = "B"; }
-                else if(i.p === "C" && i.n === wC) { prizePerUnit = sPrize; type = "C"; }
-                else if(i.p === "AB" && i.n === wA+wB) { prizePerUnit = sPrize * 2; type = "AB"; }
-                else if(i.p === "BC" && i.n === wB+wC) { prizePerUnit = sPrize * 2; type = "BC"; }
-                else if(i.p === "AC" && i.n === wA+wC) { prizePerUnit = sPrize * 2; type = "AC"; }
-            }
+            if(i.p === "A" && i.n === wA) { prizePerUnit = sPrize; type = "A"; }
+            else if(i.p === "B" && i.n === wB) { prizePerUnit = sPrize; type = "B"; }
+            else if(i.p === "C" && i.n === wC) { prizePerUnit = sPrize; type = "C"; }
+            else if(i.p === "AB" && i.n === wA+wB) { prizePerUnit = sPrize * 2; type = "AB"; }
+            else if(i.p === "BC" && i.n === wB+wC) { prizePerUnit = sPrize * 2; type = "BC"; }
+            else if(i.p === "AC" && i.n === wA+wC) { prizePerUnit = sPrize * 2; type = "AC"; }
 
             if(prizePerUnit > 0) {
-                // കീ ആയി നമ്പറും ടൈപ്പും ഉപയോഗിക്കുന്നു (ഉദാ: "123-1st")
                 let key = i.n + "-" + type;
                 if(!winnersMap[key]) {
                     winnersMap[key] = { n: i.n, p: i.p, type: type, count: 0, prize: prizePerUnit, order: prizeOrder[type] || 99 };
                 }
                 winnersMap[key].count += i.c;
             }
-        });
+        }
+    });
 
-        // സോർട്ടിംഗ് (1st, 2nd.. എന്ന ക്രമത്തിൽ)
-        let sortedWinners = Object.values(winnersMap).sort((a, b) => a.order - b.order);
+    // സോർട്ടിംഗ് (1st, 2nd.. എന്ന ക്രമത്തിൽ)
+    let sortedWinners = Object.values(winnersMap).sort((a, b) => a.order - b.order);
 
-        let reportLines = [];
-        sortedWinners.forEach(w => {
-            let lineTotal = w.count * w.prize;
-            totalWinAmount += lineTotal;
-            // ABC ഒഴിവാക്കി ബാക്കിയുള്ള പൊസിഷനുകൾ മാത്രം കാണിക്കുന്നു
-            let posLabel = (w.p === "ABC") ? "" : `(${w.p})`;
-            reportLines.push(`🌟 ${w.n} ${posLabel} [${w.type}] × ${w.count} = ₹${lineTotal}`);
-        });
+    let reportLines = [];
+    sortedWinners.forEach(w => {
+        let lineTotal = w.count * w.prize;
+        totalWinAmount += lineTotal;
+        let posLabel = (w.p === "ABC") ? "" : `(${w.p})`;
+        reportLines.push(`🌟 ${w.n} ${posLabel} [${w.type}] × ${w.count} = ₹${lineTotal}`);
+    });
 
-        let ticketRate = prizes.rate || 10;
-        let totalCost = historyTotalTickets * ticketRate;
-        let balance = totalWinAmount - totalCost;
-        let status = balance >= 0 ? "PROFIT" : "LOSS";
+    let ticketRate = prizes.rate || 10;
+    let totalCost = historyTotalTickets * ticketRate;
+    let balance = totalWinAmount - totalCost;
+    let status = balance >= 0 ? "PROFIT" : "LOSS";
 
-        lastWinDetails = `🏆 *WIN REPORT* 🏆\n\n` +
-                         (reportLines.length > 0 ? reportLines.join("\n") : "No Winners Found") +
-                         `\n\n------------------\n` +
-                         `Total Tickets: ${historyTotalTickets}\n` +
-                         `Total Cost: ₹${totalCost}\n` +
-                         `Total Win: ₹${totalWinAmount}\n` +
-                         `------------------\n` +
-                         `*NET ${status}: ₹${Math.abs(balance)}*`;
+    lastWinDetails = `🏆 *WIN REPORT* 🏆\n\n` +
+                     (reportLines.length > 0 ? reportLines.join("\n") : "No Winners Found") +
+                     `\n\n------------------\n` +
+                     `Total Tickets: ${historyTotalTickets}\n` +
+                     `Total Cost: ₹${totalCost}\n` +
+                     `Total Win: ₹${totalWinAmount}\n` +
+                     `------------------\n` +
+                     `*NET ${status}: ₹${Math.abs(balance)}*`;
 
-        document.getElementById("winDisplay").classList.remove("hidden");
-        document.getElementById("winContent").innerText = reportLines.join("\n") || "No Winners Found";
-        document.getElementById("totalWinAmount").innerHTML = `Win: ₹${totalWinAmount} | Net: ₹${balance}`;
-        showToast("റിപ്പോർട്ട് തയ്യാറായി!");
-    }
+    document.getElementById("winDisplay").classList.remove("hidden");
+    document.getElementById("winContent").innerText = reportLines.join("\n") || "No Winners Found";
+    document.getElementById("totalWinAmount").innerHTML = `Win: ₹${totalWinAmount} | Net: ₹${balance}`;
+    showToast("റിപ്പോർട്ട് തയ്യാറായി!");
+}
+
 
 
 
@@ -1180,32 +1196,24 @@
     let foundAny = false, mergeEnabled = document.getElementById("mainMergeToggle").checked;
 
     lines.forEach(line => {
-        let cleanLine = line.trim().toLowerCase();
+        // Unicode ബോൾഡ് / ഇറ്റാലിക് അക്ഷരങ്ങളും അക്കങ്ങളും സാധാരണ രൂപത്തിലേക്ക് മാറ്റുന്നു
+        let cleanLine = line.normalize("NFKC").trim().toLowerCase();
         if (!cleanLine) return;
 
-        // ആകെ തുക കാണിക്കുന്ന വരികൾ (Total, GT, Tot) ഉണ്ടെങ്കിൽ ആ വരി പൂർണ്ണമായി ഒഴിവാക്കുന്നു
+        // Total, GT പോലുള്ള അനാവശ്യ വരികൾ ഒഴിവാക്കുന്നു
         if (cleanLine.includes('total') || 
             cleanLine.includes('gt') || 
             cleanLine.includes('tot') || 
             cleanLine.includes('net') || 
-            cleanLine.includes('ਟোটਲ')) {
-            return; // ഈ വരിയിൽ അടുത്ത ലൂപ്പിലേക്ക് കടക്കുന്നു (തൊട്ടടുത്ത വരിയെ ബാധിക്കില്ല)
-        }
-        
-        if (cleanLine.includes(']')) {
-            let parts = cleanLine.split(']');
-            cleanLine = parts[1] ? parts[1].trim() : cleanLine;
-        }
-        if (cleanLine.includes(':')) {
-            let parts = cleanLine.split(':');
-            cleanLine = parts[1] ? parts[1].trim() : cleanLine;
+            cleanLine.includes('ട്രോട്ടൽ')) {
+            return;
         }
 
-        // 1. സമചിഹ്നം (=) ഉള്ള വരികൾ (ഉദാഹരണം: 123box = 2 അല്ലെങ്കിൽ 123 = 5)
-        if (cleanLine.includes('=')) {
-            let parts = cleanLine.split('=');
+        // 1. സമചിഹ്നം (=) അല്ലെങ്കിൽ കോലൺ (:) ഉള്ള വരികൾ (ഉദാ: 123:2, 513:2, 123=2)
+        if (cleanLine.includes('=') || cleanLine.includes(':')) {
+            let parts = cleanLine.split(/[:=]/);
             let numMatch = parts[0].match(/\d{3}/);
-            let countMatch = parts[1].match(/\d+/);
+            let countMatch = parts[1] ? parts[1].match(/\d+/) : null;
 
             if (numMatch && countMatch) {
                 let isBox = parts[0].includes('box') || parts[0].includes('bx');
@@ -1222,50 +1230,38 @@
                     addProcessedEntry("ABC", num, count, mergeEnabled);
                 }
                 foundAny = true;
-                return; 
+                return;
             }
         }
 
-        // 2. സ്പേസ്, കോമ, അല്ലെങ്കിൽ ഒട്ടിപ്പിടിച്ചു വരുന്ന വരികൾ പ്രോസസ്സ് ചെയ്യുന്നു
-        let tokens = cleanLine.match(/[a-z]+|\d+/g);
-        if (!tokens) return;
+        // 2. സ്പേസ് ഇട്ട് വരുന്ന സ്മാർട്ട് എൻട്രികൾ (ഉദാ: 142 5 ab 27 10 അല്ലെങ്കിൽ 142 ab 21 3)
+        let tokens = cleanLine.split(/\s+/);
+        let numIndex = tokens.findIndex(t => /^\d{3}$/.test(t));
 
-        for (let i = 0; i < tokens.length; i++) {
-            let current = tokens[i];
-            
-            if (/^\d{3}$/.test(current)) {
-                let num = current, count = 1, isBox = false, j = i + 1;
-                
-                while (j < tokens.length) {
-                    let next = tokens[j];
-                    if (next === "box" || next === "bx") { 
-                        isBox = true; 
-                        j++; 
-                    } 
-                    else if (/^\d+$/.test(next)) {
-                        if (next.length === 3) break; 
-                        else { 
-                            count = parseInt(next); 
-                            j++; 
-                            break; 
-                        }
-                    } else {
-                        j++;
-                    }
-                }
-                i = j - 1;
+        if (numIndex !== -1) {
+            let num = tokens[numIndex];
+            let count = 1;
 
-                if (isBox) {
-                    let s = num.split(''), combinations = [];
-                    for(let x=0; x<3; x++) for(let y=0; y<3; y++) for(let z=0; z<3; z++) if(x!==y && y!==z && x!==z) combinations.push(s[x]+s[y]+s[z]);
-                    [...new Set(combinations)].forEach(bxNum => {
-                        addProcessedEntry("ABC", bxNum, count, mergeEnabled);
-                    });
-                } else {
-                    addProcessedEntry("ABC", num, count, mergeEnabled);
+            // 3-അക്ക നമ്പറിന് തൊട്ടടുത്ത് വരുന്ന ടോക്കൺ ഒരു കൗണ്ട് ആണോ എന്ന് നോക്കുന്നു (ഉദാ: 142 കഴിഞ്ഞുള്ള '5')
+            if (numIndex + 1 < tokens.length) {
+                let nextToken = tokens[numIndex + 1];
+                if (/^\d+$/.test(nextToken)) {
+                    count = parseInt(nextToken);
                 }
-                foundAny = true;
             }
+
+            let isBox = cleanLine.includes('box') || cleanLine.includes('bx');
+
+            if (isBox) {
+                let s = num.split(''), combinations = [];
+                for(let x=0; x<3; x++) for(let y=0; y<3; y++) for(let z=0; z<3; z++) if(x!==y && y!==z && x!==z) combinations.push(s[x]+s[y]+s[z]);
+                [...new Set(combinations)].forEach(bxNum => {
+                    addProcessedEntry("ABC", bxNum, count, mergeEnabled);
+                });
+            } else {
+                addProcessedEntry("ABC", num, count, mergeEnabled);
+            }
+            foundAny = true;
         }
     });
 
@@ -1279,6 +1275,7 @@
         showToast("നമ്പറുകൾ ഒന്നും കണ്ടെത്തിയില്ല!"); 
     }
 }
+
 
 
     function addProcessedEntry(pos, num, count, mergeEnabled) {
