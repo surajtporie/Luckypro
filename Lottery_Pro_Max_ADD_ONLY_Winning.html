@@ -396,7 +396,7 @@
 <div id="smartModal" class="overlay">
     <div class="modal glass-panel">
         <h3>Smart Paste</h3>
-        <textarea id="smartPaste" placeholder="Paste data here (e.g., 142box 2)..." style="height:150px;"></textarea>
+        <textarea id="smartPaste" placeholder="Paste data here (e.g., A5 10, 142box 2)..." style="height:150px;"></textarea>
         <button class="btn-s" style="width:100%; margin-top:10px;" onclick="processSmartPaste()">ADD DATA</button>
         <button class="btn-p" style="width:100%; margin-top:10px; background:#444; color:white;" onclick="closeModals()">CLOSE</button>
     </div>
@@ -1241,72 +1241,69 @@
             let cleanLine = line.trim().toLowerCase();
             if (!cleanLine) return;
 
+            // 1. WhatsApp Time/Header ഭാഗം ഒഴിവാക്കുന്നു
+            if (cleanLine.includes(']')) {
+                let parts = cleanLine.split(':');
+                if (parts.length > 2) {
+                    cleanLine = parts.slice(2).join(':').trim();
+                } else {
+                    let bracketParts = cleanLine.split(']');
+                    cleanLine = bracketParts[1] ? bracketParts[1].trim() : cleanLine;
+                }
+            }
+
+            // 2. ഫോൺ നമ്പർ സന്ദേശത്തിന് മുന്നിൽ വന്നിട്ടുണ്ടെങ്കിൽ നീക്കുന്നു
+            cleanLine = cleanLine.replace(/^\+?\d[\d\s-]{8,}\d:?/, '').trim();
+            if (!cleanLine) return;
+
+            // 3. ഒഴിവാക്കേണ്ട പൊതുവായ വാക്കുകൾ
             if (cleanLine.includes('total') || 
                 cleanLine.includes('gt') || 
                 cleanLine.includes('tot') || 
                 cleanLine.includes('net') || 
-                cleanLine.includes('ਟੋਟਲ')) {
+                cleanLine.includes('ടോറ്റൽ')) {
                 return;
             }
 
-            if (cleanLine.includes(']')) {
-                let parts = cleanLine.split(']');
-                cleanLine = parts[1] ? parts[1].trim() : cleanLine;
-            }
+            // 4. A5 10, B2 5, AB12 10 പോലെ ലെറ്ററും നമ്പറും അടുത്ത് വരുന്നത് പ്രോസസ് ചെയ്യാനും വേർതിരിക്കാനും പ്ലേസ്‌ഹോൾഡർ മാറ്റുന്നു
+            cleanLine = cleanLine.replace(/\b(ab|bc|ac|a|b|c)(\d+)\b/g, '$1 $2');
 
-            if (cleanLine.includes('=') || cleanLine.includes(':')) {
-                let sep = cleanLine.includes('=') ? '=' : ':';
-                let parts = cleanLine.split(sep);
-                let numMatch = parts[0].match(/\d{3}/);
-                let countMatch = parts[1].match(/\d+/);
+            // 5. കോമ, കുത്ത്, ഈക്വൽ, കോളൻ തുടങ്ങിയ ചിഹ്നങ്ങളെ സ്പേസ് ആക്കി മാറ്റുന്നു
+            let normalizedLine = cleanLine.replace(/[,:=]/g, ' ').replace(/\s+/g, ' ').trim();
 
-                if (numMatch && countMatch) {
-                    let isBox = parts[0].includes('box') || parts[0].includes('bx');
-                    let num = numMatch[0];
-                    let count = parseInt(countMatch[0]);
-
-                    if (isBox) {
-                        let s = num.split(''), combinations = [];
-                        for(let x=0; x<3; x++) for(let y=0; y<3; y++) for(let z=0; z<3; z++) if(x!==y && y!==z && x!==z) combinations.push(s[x]+s[y]+s[z]);
-                        [...new Set(combinations)].forEach(bxNum => {
-                            addProcessedEntry("ABC", bxNum, count, mergeEnabled);
-                        });
-                    } else {
-                        addProcessedEntry("ABC", num, count, mergeEnabled);
-                    }
-                    foundAny = true;
-                    return; 
-                }
-            }
-
-            let tokens = cleanLine.match(/[a-z]+|\d+/g);
-            if (!tokens) return;
+            // 6. സ്പേസ് വെച്ച് വാക്ക് പിരിക്കുന്നു
+            let tokens = normalizedLine.split(' ').filter(Boolean);
+            if (!tokens || tokens.length === 0) return;
 
             for (let i = 0; i < tokens.length; i++) {
                 let current = tokens[i];
 
+                // Single / Double Digits (A, B, C, AB, BC, AC)
                 if (["a", "b", "c", "ab", "bc", "ac"].includes(current)) {
                     let pos = current.toUpperCase();
+                    let expectedLen = (["A", "B", "C"].includes(pos)) ? 1 : 2;
                     let nextToken = tokens[i + 1];
-                    let valLength = pos.length;
                     
-                    if (nextToken && new RegExp(`^\\d{${valLength}}$`).test(nextToken)) {
+                    if (nextToken && /^\d+$/.test(nextToken)) {
+                        let num = nextToken.padStart(expectedLen, '0');
                         let count = 1;
                         let afterValueToken = tokens[i + 2];
-                        if (afterValueToken && /^\d+$/.test(afterValueToken) && afterValueToken.length !== 3) {
+                        if (afterValueToken && /^\d+$/.test(afterValueToken)) {
                             count = parseInt(afterValueToken);
                             i += 2;
                         } else {
                             i += 1;
                         }
-                        addProcessedEntry(pos, nextToken, count, mergeEnabled);
+                        addProcessedEntry(pos, num, count, mergeEnabled);
                         foundAny = true;
                         continue;
                     }
                 }
                 
-                if (/^\d{3}$/.test(current)) {
-                    let num = current;
+                // 3 Digits (080 box 5, 000 10, 801 20 തുടങ്ങിയവ)
+                let digitMatch = current.match(/^\d+$/);
+                if (digitMatch && current.length <= 3) {
+                    let num = current.padStart(3, '0');
                     let count = 1;
                     let isBox = false;
 
@@ -1316,12 +1313,12 @@
                         isBox = true;
                         i++;
                         let countToken = tokens[i + 1];
-                        if (countToken && /^\d+$/.test(countToken) && countToken.length !== 3) {
+                        if (countToken && /^\d+$/.test(countToken)) {
                             count = parseInt(countToken);
                             i++;
                         }
                     } 
-                    else if (nextToken && /^\d+$/.test(nextToken) && nextToken.length !== 3) {
+                    else if (nextToken && /^\d+$/.test(nextToken)) {
                         count = parseInt(nextToken);
                         i++;
                     }
