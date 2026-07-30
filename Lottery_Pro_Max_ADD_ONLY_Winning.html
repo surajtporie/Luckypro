@@ -39,11 +39,14 @@
 
     body.keypad-open .app-container { padding-bottom: 380px !important; }
 
-    .app-container { width: 100%; max-width: 480px; padding: 10px 15px 100px 15px; box-sizing: border-box; transition: padding 0.3s; }
+    .app-container { width: 100%; max-width: 480px; padding: 15px; box-sizing: border-box; padding-bottom: 100px; transition: padding 0.3s; }
+
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .brand { font-size: 22px; font-weight: 800; background: linear-gradient(45deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     
     .glass-panel {
         background: var(--card); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
-        border-radius: 20px; border: 1px solid var(--glass); padding: 12px 15px; margin-bottom: 12px;
+        border-radius: 24px; border: 1px solid var(--glass); padding: 15px; margin-bottom: 15px;
         box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     }
 
@@ -51,7 +54,7 @@
         font-family: 'Orbitron', sans-serif;
     }
 
-    .stat-item b { font-size: 22px; color: var(--secondary); text-shadow: 0 0 10px rgba(3,218,198,0.2); }
+    .stat-item b { font-size: 24px; color: var(--secondary); text-shadow: 0 0 10px rgba(3,218,198,0.2); }
 
     .bottom-nav {
         position: fixed; bottom: 0; left: 0; width: 100%; height: 75px;
@@ -96,9 +99,9 @@
     .btn-p { background: var(--primary); color: #000; padding: 12px; }
     .btn-s { background: var(--secondary); color: #000; padding: 12px; }
     .btn-o { background: #f57c00; color: white; padding: 12px; }
-    .btn-copy-blue { background: #3498db; color: white; padding: 10px 16px; font-size: 12px; }
+    .btn-copy-blue { background: #3498db; color: white; padding: 10px 18px; }
 
-    .undo-mini { background: #ff9800; color: black; width: 36px; height: 36px; border-radius: 50%; display: none; align-items: center; justify-content: center; border: none; box-shadow: 0 0 10px rgba(255,152,0,0.5); font-size: 18px; flex-shrink: 0; }
+    .undo-mini { background: #ff9800; color: black; width: 35px; height: 35px; border-radius: 50%; display: none; align-items: center; justify-content: center; border: none; box-shadow: 0 0 10px rgba(255,152,0,0.5); }
 
     .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 4000; backdrop-filter: blur(8px); padding: 15px; }
     .modal { background: var(--card); width: 100%; max-width: 400px; padding: 20px; border-radius: 25px; border: 1px solid var(--glass); }
@@ -186,23 +189,21 @@
 <div id="toast">Message</div>
 
 <div class="app-container" id="mainContainer">
+    <div class="header">
+        <div class="brand">LOTTERY PRO MAX</div>
+        <button id="undoMini" class="undo-mini" onclick="undoClear()">↩</button>
+    </div>
 
     <div id="home-view">
-        <div class="glass-panel" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; margin-top: 5px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <button id="undoMini" class="undo-mini" onclick="undoClear()">↩</button>
-                <div class="stat-item" style="line-height: 1.1;">
-                    <span style="font-size: 11px; color: var(--text-dim); font-weight: bold;">TOTAL COUNT</span><br>
-                    <b id="liveTotal">0</b>
-                </div>
-            </div>
-            <div style="display: flex; gap: 6px;">
+        <div class="glass-panel" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="stat-item"><span>Total Count</span><br><b id="liveTotal">0</b></div>
+            <div style="display: flex; gap: 8px;">
                 <button class="btn-copy-blue" onclick="copyCurrentList()">COPY</button>
-                <button class="btn-s" onclick="share()" style="padding: 10px 16px; font-size: 12px;">SHARE</button>
+                <button class="btn-s" onclick="share()" style="padding: 10px 18px;">SHARE</button>
             </div>
         </div>
 
-        <div class="action-row" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px;">
+        <div class="action-row" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px;">
             <button class="btn-p" style="font-size: 11px; padding: 12px 0;" onclick="toggleModal('smartModal')">📋 SMART</button>
             <button class="btn-p" style="font-size: 11px; padding: 12px 0;" onclick="mergeCurrentList()">🧬 MERGE</button>
             <button class="btn-p" style="font-size: 11px; padding: 12px 0;" onclick="sortCurrentList()">🔃 SORT</button>
@@ -216,7 +217,7 @@
             <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="processImage(this)">
         </div>
 
-        <div class="tabs-wrapper" id="tabsList" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px;"></div>
+        <div class="tabs-wrapper" id="tabsList" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px;"></div>
 
         <div class="glass-panel">
             <div class="switch-row">
@@ -228,7 +229,7 @@
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px;">
-                <input id="customer" placeholder="Customer Name" oninput="updateTabName()" onkeydown="handleCustomerKey(event)" style="margin:0; flex: 1;">
+                <input id="customer" placeholder="Customer Name" oninput="updateTabName()" style="margin:0; flex: 1;">
                 <div id="lastEntryLabel" class="last-entry-indicator"></div>
             </div>
             
@@ -321,14 +322,6 @@
             </div>
         </div>
         <hr style="opacity:0.1; margin:15px 0;">
-        
-        <!-- History Tab Navigation -->
-        <div style="display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--glass); padding-bottom: 8px;">
-            <button id="tabHist3" class="btn-p" style="flex:1; font-size:11px; padding:8px 0;" onclick="switchHistoryTab(3)">3 Digit</button>
-            <button id="tabHist2" class="btn-p" style="flex:1; font-size:11px; padding:8px 0; background:rgba(255,255,255,0.1); color:white;" onclick="switchHistoryTab(2)">2 Digit</button>
-            <button id="tabHist1" class="btn-p" style="flex:1; font-size:11px; padding:8px 0; background:rgba(255,255,255,0.1); color:white;" onclick="switchHistoryTab(1)">1 Digit</button>
-        </div>
-
         <div id="savedList" style="max-height: 300px; overflow-y: auto;"></div>
         
         <div class="btn-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:15px;">
@@ -377,9 +370,8 @@
             <div class="price-input-box"><label>4th</label><input type="number" id="prz4" value="120"></div>
             <div class="price-input-box"><label>5th</label><input type="number" id="prz5" value="80"></div>
             <div class="price-input-box"><label>6th+</label><input type="number" id="prz6" value="35"></div>
-            <div class="price-input-box"><label>Double (AB/BC/AC)</label><input type="number" id="przD" value="600"></div>
             <div class="price-input-box"><label>Single (A/B/C)</label><input type="number" id="przS" value="80"></div>
-            <div class="price-input-box" style="border: 1px solid var(--secondary); border-radius: 8px; grid-column: span 2;"><label style="color:var(--secondary)">Ticket Rate ₹</label><input type="number" id="tktRate" value="10"></div>
+            <div class="price-input-box" style="border: 1px solid var(--secondary); border-radius: 8px;"><label style="color:var(--secondary)">Ticket Rate ₹</label><input type="number" id="tktRate" value="10"></div>
         </div>
         <div style="display:flex; justify-content:space-between; margin:15px 0;">
             <span>Merge Duplicates</span>
@@ -396,7 +388,7 @@
 <div id="smartModal" class="overlay">
     <div class="modal glass-panel">
         <h3>Smart Paste</h3>
-        <textarea id="smartPaste" placeholder="Paste data here (e.g., A5 10, 142box 2)..." style="height:150px;"></textarea>
+        <textarea id="smartPaste" placeholder="Paste data here (e.g., 142box 2)..." style="height:150px;"></textarea>
         <button class="btn-s" style="width:100%; margin-top:10px;" onclick="processSmartPaste()">ADD DATA</button>
         <button class="btn-p" style="width:100%; margin-top:10px; background:#444; color:white;" onclick="closeModals()">CLOSE</button>
     </div>
@@ -414,15 +406,12 @@
 </div>
 
 <script>
-
     let customers = JSON.parse(localStorage.getItem("lottery_customers")) || [{name: "", temp: []}];
     let activeIndex = 0;
     let permanent = JSON.parse(localStorage.getItem("perm_list")) || [];
-    let activeHistoryTab = 3;
-
     let savedResults = JSON.parse(localStorage.getItem("saved_results")) || {};
     let recentSessions = JSON.parse(localStorage.getItem("recent_sessions")) || [];
-    let prizes = JSON.parse(localStorage.getItem("lottery_prizes")) || { p1:5400, p2:550, p3:270, p4:120, p5:80, p6:35, pd: 600, ps:80, rate: 10 };
+    let prizes = JSON.parse(localStorage.getItem("lottery_prizes")) || { p1:5400, p2:550, p3:270, p4:120, p5:80, p6:35, ps:80, rate: 10 };
     let currentInputId = 'num';
     let isNewInput = false;
     let lastDeletedData = null;
@@ -438,13 +427,6 @@
         updateResultDropdown();
         document.body.className = localStorage.getItem("app_theme") || "";
         showToast("Welcome Back! 🚀");
-    }
-
-    function handleCustomerKey(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            setFocus('num');
-        }
     }
 
     function syncMergeSettings(val) {
@@ -533,27 +515,10 @@
             closeModals();
         } else if(page === 'history') {
             toggleModal('historyPage');
-            switchHistoryTab(activeHistoryTab);
+            renderSaved();
         } else if(page === 'settings') {
             toggleModal('settingsModal');
         }
-    }
-
-    function switchHistoryTab(digit) {
-        activeHistoryTab = digit;
-        [1, 2, 3].forEach(d => {
-            let btn = document.getElementById(`tabHist${d}`);
-            if(btn) {
-                if(d === digit) {
-                    btn.style.background = "var(--primary)";
-                    btn.style.color = "black";
-                } else {
-                    btn.style.background = "rgba(255,255,255,0.1)";
-                    btn.style.color = "white";
-                }
-            }
-        });
-        renderSaved();
     }
 
     function playSnd(countValue = 0) { 
@@ -779,66 +744,73 @@
     }
 
     function openRecentModal() {
-        let h = "";
-        if (recentSessions.length === 0) h = "<p style='text-align:center; padding:20px;'>No Recent History Found</p>";
-        else {
-            recentSessions.forEach(session => {
-                let total = session.data.reduce((sum, item) => sum + item.c, 0);
-                
-                let isFullBackup = (session.name === "FULL HISTORY BACKUP");
-                let buttonText = isFullBackup ? "⏳ RESTORE FULL HISTORY BACK TO SAVED PAGE" : "RESTORE TO CURRENT PAGE";
-                let buttonStyle = isFullBackup ? "background:#2ecc71; color:black; font-weight:bold; border:1px solid white;" : "";
+    let h = "";
+    if (recentSessions.length === 0) h = "<p style='text-align:center; padding:20px;'>No Recent History Found</p>";
+    else {
+        recentSessions.forEach(session => {
+            let total = session.data.reduce((sum, item) => sum + item.c, 0);
+            
+            let isFullBackup = (session.name === "FULL HISTORY BACKUP");
+            let buttonText = isFullBackup ? "⏳ RESTORE FULL HISTORY BACK TO SAVED PAGE" : "RESTORE TO CURRENT PAGE";
+            let buttonStyle = isFullBackup ? "background:#2ecc71; color:black; font-weight:bold; border:1px solid white;" : "";
 
-                h += `<div class="recent-block" style="border-bottom:1px solid #444; padding:10px 0;">
-                        <div class="recent-time">${session.time} | <span style="color:var(--primary)">${session.type}</span></div>
-                        <div style="font-weight:bold; margin-bottom:5px; color:var(--secondary)">Name: ${session.name}</div>
-                        <div style="max-height:150px; overflow-y:auto; font-size:12px; background:rgba(0,0,0,0.2); padding:8px; border-radius:10px;">
-                            ${session.data.map(i => `${i.p} ${i.n} = ${i.c}`).join("<br>")}
-                        </div>
-                        <div style="text-align:right; font-weight:bold; margin-top:5px; color:var(--primary)">Total: ${total}</div>
-                        
-                        <button class="btn-s" style="width:100%; margin-top:8px; font-size:11px; padding:8px; ${buttonStyle}" onclick="restoreRecent(${session.id})">${buttonText}</button>
-                      </div>`;
-            });
-        }
-        document.getElementById("recentContentList").innerHTML = h;
-        document.getElementById("recentModal").classList.add("flex");
+            h += `<div class="recent-block" style="border-bottom:1px solid #444; padding:10px 0;">
+                    <div class="recent-time">${session.time} | <span style="color:var(--primary)">${session.type}</span></div>
+                    <div style="font-weight:bold; margin-bottom:5px; color:var(--secondary)">Name: ${session.name}</div>
+                    <div style="max-height:150px; overflow-y:auto; font-size:12px; background:rgba(0,0,0,0.2); padding:8px; border-radius:10px;">
+                        ${session.data.map(i => `${i.p} ${i.n} = ${i.c}`).join("<br>")}
+                    </div>
+                    <div style="text-align:right; font-weight:bold; margin-top:5px; color:var(--primary)">Total: ${total}</div>
+                    
+                    <button class="btn-s" style="width:100%; margin-top:8px; font-size:11px; padding:8px; ${buttonStyle}" onclick="restoreRecent(${session.id})">${buttonText}</button>
+                  </div>`;
+        });
     }
+    document.getElementById("recentContentList").innerHTML = h;
+    document.getElementById("recentModal").classList.add("flex");
+}
+
+
+
 
     function restoreRecent(id) {
-        let session = recentSessions.find(s => s.id === id);
-        if(!session) {
-            alert("ഡാറ്റ കണ്ടെത്താൻ കഴിഞ്ഞില്ല!");
-            return;
-        }
+    let session = recentSessions.find(s => s.id === id);
+    if(!session) {
+        alert("ഡാറ്റ കണ്ടെത്താൻ കഴിഞ്ഞില്ല!");
+        return;
+    }
 
-        if(session.name === "FULL HISTORY BACKUP") {
-            if(confirm("ഈ ഫുൾ ഡാറ്റ തിരികെ Saved History പേജിലേക്ക് മാറ്റട്ടെ?")) {
-                permanent = [...session.data];
-                localStorage.setItem("perm_list", JSON.stringify(permanent));
-                
-                if (typeof renderSaved === "function") renderSaved();
-                if (typeof renderResultHistory === "function") renderResultHistory();
-                
+    // ഇത് ഫുൾ ഹിസ്റ്ററി ബാക്കപ്പ് ആണോ എന്ന് നോക്കുന്നു
+    if(session.name === "FULL HISTORY BACKUP") {
+        if(confirm("ഈ ഫുൾ ഡാറ്റ തിരികെ Saved History പേജിലേക്ക് മാറ്റട്ടെ?")) {
+            permanent = [...session.data];
+            localStorage.setItem("perm_list", JSON.stringify(permanent));
+            
+            // ഹിസ്റ്ററി ടേബിളും ലിസ്റ്റും റീഫ്രെഷ് ചെയ്യുന്നു
+            if (typeof renderSaved === "function") renderSaved();
+            if (typeof renderResultHistory === "function") renderResultHistory();
+            
+            document.getElementById("recentModal").classList.remove("flex");
+            showToast("മുഴുവൻ ഹിസ്റ്ററിയും വിജയകരമായി തിരികെ എടുത്തു! 🎉");
+        }
+    } else {
+        // സാധാരണ സിംഗിൾ കസ്റ്റമർ പേജ് റീസ്റ്റോർ ചെയ്യാനുള്ള പഴയ കോഡ്
+        if(confirm("ഈ ഡാറ്റ നിലവിലെ കസ്റ്റമർ പേജിലേക്ക് മാറ്റട്ടെ?")) {
+            if(typeof activeIndex !== 'undefined' && customers[activeIndex]) {
+                customers[activeIndex].temp = [...session.data];
+                customers[activeIndex].name = session.name;
+                document.getElementById("customer").value = session.name;
+                if (typeof renderTabs === "function") renderTabs();
+                if (typeof save === "function") save();
                 document.getElementById("recentModal").classList.remove("flex");
-                showToast("മുഴുവൻ ഹിസ്റ്ററിയും വിജയകരമായി തിരികെ എടുത്തു! 🎉");
-            }
-        } else {
-            if(confirm("ഈ ഡാറ്റ നിലവിലെ കസ്റ്റമർ പേജിലേക്ക് മാറ്റട്ടെ?")) {
-                if(typeof activeIndex !== 'undefined' && customers[activeIndex]) {
-                    customers[activeIndex].temp = [...session.data];
-                    customers[activeIndex].name = session.name;
-                    document.getElementById("customer").value = session.name;
-                    if (typeof renderTabs === "function") renderTabs();
-                    if (typeof save === "function") save();
-                    document.getElementById("recentModal").classList.remove("flex");
-                    showToast("ഡാറ്റ റീസ്റ്റോർ ചെയ്തു!");
-                } else {
-                    alert("കറന്റ് കസ്റ്റമർ ടാബ് ആക്ടീവ് അല്ല!");
-                }
+                showToast("ഡാറ്റ റീസ്റ്റോർ ചെയ്തു!");
+            } else {
+                alert("കറന്റ് കസ്റ്റമർ ടാബ് ആക്ടീവ് അല്ല!");
             }
         }
     }
+}
+
 
     function clearRecentHistory() {
         if(confirm("പഴയ എല്ലാ ഹിസ്റ്ററിയും ക്ലിയർ ചെയ്യട്ടെ?")) {
@@ -861,51 +833,28 @@
         showToast(cutValue + " കൗണ്ട് വീതം കുറച്ചു!");
     }
 
-    function isMatchingTab(pos, tab) {
-        if (tab === 3) return pos === "ABC";
-        if (tab === 2) return ["AB", "BC", "AC"].includes(pos);
-        if (tab === 1) return ["A", "B", "C"].includes(pos);
-        return false;
-    }
-
     function historyCutOnly() {
         if (permanent.length === 0) { showToast("ഹിസ്റ്ററിയിൽ ഡാറ്റ ഇല്ല!"); return; }
-        
-        let tabName = activeHistoryTab === 3 ? "3 Digit" : (activeHistoryTab === 2 ? "2 Digit" : "1 Digit");
-        let cutValue = prompt(`${tabName} നമ്പറുകളിൽ നിന്ന് എത്ര കൗണ്ട് വീതം കുറയ്ക്കണം?`, "5");
+        let cutValue = prompt("ഓരോ നമ്പറിൽ നിന്നും എത്ര കൗണ്ട് വീതം കുറയ്ക്കണം?", "5");
         if (cutValue === null || isNaN(parseInt(cutValue))) return;
         cutValue = parseInt(cutValue);
-        
         let safeBoxText = document.getElementById("safeBoxInput").value;
         let safeNumbers = safeBoxText.match(/\d+/g) || [];
-        
-        if(confirm(`${tabName} ടാബിലെ നമ്പറുകൾ മാത്രം മെർജ് ചെയ്ത് അതിൽ നിന്ന് ${cutValue} കൗണ്ട് വീതം കുറയ്ക്കട്ടെ?`)) {
-            let currentTabItems = permanent.filter(i => isMatchingTab(i.p, activeHistoryTab));
-            let otherTabItems = permanent.filter(i => !isMatchingTab(i.p, activeHistoryTab));
-
-            if(currentTabItems.length === 0) {
-                showToast(`${tabName} ടാബിൽ പ്രോസസ്സ് ചെയ്യാൻ ഡാറ്റ ഒന്നുമില്ല!`);
-                return;
-            }
-
+        if(confirm(`ഹിസ്റ്ററിയിലെ നമ്പറുകൾ മെർജ് ചെയ്ത് അതിൽ നിന്ന് ${cutValue} കൗണ്ട് വീതം കുറയ്ക്കട്ടെ?`)) {
             let dict = {};
-            currentTabItems.forEach(i => {
+            permanent.forEach(i => {
                 let k = i.p + "-" + i.n;
                 if(!dict[k]) dict[k] = { p: i.p, n: i.n, c: 0, batchId: Date.now() };
                 dict[k].c += i.c;
             });
-
-            let processedCurrentTab = Object.values(dict).map(item => {
-                if (!safeNumbers.includes(item.n)) {
-                    item.c = Math.max(0, item.c - cutValue);
-                }
+            let processedData = Object.values(dict).map(item => {
+                if (!safeNumbers.includes(item.n)) item.c = Math.max(0, item.c - cutValue);
                 return item;
             }).filter(item => item.c > 0);
-
-            permanent = [...otherTabItems, ...processedCurrentTab];
+            permanent = processedData;
             localStorage.setItem("perm_list", JSON.stringify(permanent));
             renderSaved(true); 
-            showToast(`${tabName} ലെ കൗണ്ട് കുറച്ചു, ഡാറ്റ മെർജ് ചെയ്തു!`);
+            showToast("കൗണ്ട് കുറച്ചു, ഡാറ്റ മെർജ് ചെയ്തു!");
         }
     }
 
@@ -929,7 +878,6 @@
         document.getElementById("prz4").value = prizes.p4;
         document.getElementById("prz5").value = prizes.p5;
         document.getElementById("prz6").value = prizes.p6;
-        document.getElementById("przD").value = prizes.pd || 600;
         document.getElementById("przS").value = prizes.ps || 80;
         document.getElementById("tktRate").value = prizes.rate || 10;
     }
@@ -942,36 +890,30 @@
         prizes.p4 = parseInt(document.getElementById("prz4").value);
         prizes.p5 = parseInt(document.getElementById("prz5").value);
         prizes.p6 = parseInt(document.getElementById("prz6").value);
-        prizes.pd = parseInt(document.getElementById("przD").value) || 600;
-        prizes.ps = parseInt(document.getElementById("przS").value) || 80;
+        prizes.ps = parseInt(document.getElementById("przS").value);
         prizes.rate = parseInt(document.getElementById("tktRate").value) || 10;
         localStorage.setItem("lottery_prizes", JSON.stringify(prizes));
         closeModals(); showToast("Settings Saved!"); 
     }
 
     function renderSaved(m = false) {
-        let filteredPermanent = permanent.filter(i => isMatchingTab(i.p, activeHistoryTab));
-
         let list = [];
         let totalCount = 0;
-        filteredPermanent.forEach(i => totalCount += i.c);
-
+        permanent.forEach(i => totalCount += i.c);
         if(m) { 
             let dict = {}; 
-            filteredPermanent.forEach(i => { 
+            permanent.forEach(i => { 
                 let k = i.p + "-" + i.n; 
                 if(!dict[k]) dict[k] = { p: i.p, n: i.n, c: 0, isMerged: true };
                 dict[k].c += i.c; 
             }); 
             list = Object.values(dict).sort((a,b) => b.c - a.c); 
         } else { 
-            list = [...filteredPermanent].reverse(); 
+            list = [...permanent].reverse(); 
         }
-
         let h = ""; 
         list.forEach((i, index) => {
-            let originalIndex = permanent.indexOf(i);
-            let delAction = i.isMerged ? `delMergedNumber('${i.n}', '${i.p}')` : `delHistoryItem(${originalIndex})`;
+            let delAction = i.isMerged ? `delMergedNumber('${i.n}', '${i.p}')` : `delHistoryItem(${permanent.length - 1 - index})`;
             h += `<div class="list-item">
                     <span>${i.p} <b style="font-family:'Orbitron'">${i.n}</b></span> 
                     <div style="display:flex; align-items:center; gap:15px;">
@@ -980,8 +922,7 @@
                     </div>
                   </div>`;
         });
-
-        let totalBar = `<div class="history-total-bar">${activeHistoryTab} DIGIT TOTAL: ${totalCount}</div>`;
+        let totalBar = `<div class="history-total-bar">HISTORY TOTAL: ${totalCount}</div>`;
         document.getElementById("savedList").innerHTML = (list.length > 0) ? (totalBar + h) : "<p style='text-align:center; padding:10px;'>No History</p>";
     }
 
@@ -1083,7 +1024,7 @@
         document.getElementById("stepStart").value = ""; document.getElementById("stepEnd").value = ""; document.getElementById("stepCount").value = "";
     }
 
-    function checkWinners() {
+            function checkWinners() {
         let winText = document.getElementById("winningPaste").value;
         let found = winText.match(/\d{3}/g);
         if(!found || found.length === 0) {
@@ -1096,15 +1037,17 @@
 
         let totalWinAmount = 0;
         let historyTotalTickets = 0;
-        let winnersMap = {};
+        let winnersMap = {}; // Merge ചെയ്യാനായി ഉപയോഗിക്കുന്നു
 
-        const prizeOrder = { "1st": 1, "2nd": 2, "3rd": 3, "4th": 4, "5th": 5, "6th+": 6, "AB": 7, "BC": 8, "AC": 9, "A": 10, "B": 11, "C": 12 };
+        // സമ്മാനങ്ങളുടെ ഓർഡർ നിശ്ചയിക്കുന്നു
+        const prizeOrder = { "1st": 1, "2nd": 2, "3rd": 3, "4th": 4, "5th": 5, "6th+": 6, "A": 7, "B": 8, "C": 9, "AB": 10, "BC": 11, "AC": 12 };
 
         permanent.forEach(i => {
             historyTotalTickets += i.c; 
             let prizePerUnit = 0;
             let type = "";
 
+            // Winner Logic
             if(i.p === "ABC") {
                 if(i.n === found[0]) { prizePerUnit = prizes.p1; type = "1st"; }
                 else if(found[1] && i.n === found[1]) { prizePerUnit = prizes.p2; type = "2nd"; }
@@ -1118,16 +1061,16 @@
                 }
             } else {
                 let sPrize = prizes.ps || 80;
-                let dPrize = prizes.pd || 600;
                 if(i.p === "A" && i.n === wA) { prizePerUnit = sPrize; type = "A"; }
                 else if(i.p === "B" && i.n === wB) { prizePerUnit = sPrize; type = "B"; }
                 else if(i.p === "C" && i.n === wC) { prizePerUnit = sPrize; type = "C"; }
-                else if(i.p === "AB" && i.n === wA+wB) { prizePerUnit = dPrize; type = "AB"; }
-                else if(i.p === "BC" && i.n === wB+wC) { prizePerUnit = dPrize; type = "BC"; }
-                else if(i.p === "AC" && i.n === wA+wC) { prizePerUnit = dPrize; type = "AC"; }
+                else if(i.p === "AB" && i.n === wA+wB) { prizePerUnit = sPrize * 2; type = "AB"; }
+                else if(i.p === "BC" && i.n === wB+wC) { prizePerUnit = sPrize * 2; type = "BC"; }
+                else if(i.p === "AC" && i.n === wA+wC) { prizePerUnit = sPrize * 2; type = "AC"; }
             }
 
             if(prizePerUnit > 0) {
+                // കീ ആയി നമ്പറും ടൈപ്പും ഉപയോഗിക്കുന്നു (ഉദാ: "123-1st")
                 let key = i.n + "-" + type;
                 if(!winnersMap[key]) {
                     winnersMap[key] = { n: i.n, p: i.p, type: type, count: 0, prize: prizePerUnit, order: prizeOrder[type] || 99 };
@@ -1136,12 +1079,14 @@
             }
         });
 
+        // സോർട്ടിംഗ് (1st, 2nd.. എന്ന ക്രമത്തിൽ)
         let sortedWinners = Object.values(winnersMap).sort((a, b) => a.order - b.order);
 
         let reportLines = [];
         sortedWinners.forEach(w => {
             let lineTotal = w.count * w.prize;
             totalWinAmount += lineTotal;
+            // ABC ഒഴിവാക്കി ബാക്കിയുള്ള പൊസിഷനുകൾ മാത്രം കാണിക്കുന്നു
             let posLabel = (w.p === "ABC") ? "" : `(${w.p})`;
             reportLines.push(`🌟 ${w.n} ${posLabel} [${w.type}] × ${w.count} = ₹${lineTotal}`);
         });
@@ -1166,6 +1111,8 @@
         showToast("റിപ്പോർട്ട് തയ്യാറായി!");
     }
 
+
+
     async function copyWinningList() { 
         try { if (!lastWinDetails) return; await navigator.clipboard.writeText(lastWinDetails); showToast("Copied!"); } 
         catch (err) { let textArea = document.createElement("textarea"); textArea.value = lastWinDetails; document.body.appendChild(textArea); textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); }
@@ -1183,32 +1130,31 @@
     }
 
     function clearAllHistory() {
-        if(confirm("ഹിസ്റ്ററി, വിന്നിംഗ് റിപ്പോർട്ട്, സേവ് ചെയ്ത റിസൾട്ടുകൾ എന്നിവ പൂർണ്ണമായും ക്ലിയർ ചെയ്യട്ടെ?")) {
-            if(permanent && permanent.length > 0) {
-                addToRecentSessions("FULL HISTORY BACKUP", [...permanent], "CLEARED");
-            }
-
-            permanent = []; localStorage.setItem("perm_list", "[]");
-            savedResults = {}; localStorage.setItem("saved_results", "{}");
-            document.getElementById("winningPaste").value = "";
-            document.getElementById("winContent").innerText = "";
-            document.getElementById("totalWinAmount").innerText = "₹0";
-            document.getElementById("winDisplay").classList.add("hidden");
-            lastWinDetails = ""; 
-            renderSaved(); renderResultHistory(); updateResultDropdown(); 
-            showToast("എല്ലാം റീസെന്റ് ഹിസ്റ്ററിയിലേക്ക് മാറ്റി ക്ലിയർ ചെയ്തു! 🗑️");
+    if(confirm("ഹിസ്റ്ററി, വിന്നിംഗ് റിപ്പോർട്ട്, സേവ് ചെയ്ത റിസൾട്ടുകൾ എന്നിവ പൂർണ്ണമായും ക്ലിയർ ചെയ്യട്ടെ?")) {
+        // [CRITICAL UPDATE]: ക്ലിയർ ചെയ്യുന്ന ഫുൾ ഹിസ്റ്ററി ഡാറ്റയെ ഒരുമിച്ച് RECENT-ലേക്ക് മാറ്റുന്നു
+        if(permanent && permanent.length > 0) {
+            addToRecentSessions("FULL HISTORY BACKUP", [...permanent], "CLEARED");
         }
-    }
 
+        permanent = []; localStorage.setItem("perm_list", "[]");
+        savedResults = {}; localStorage.setItem("saved_results", "{}");
+        document.getElementById("winningPaste").value = "";
+        document.getElementById("winContent").innerText = "";
+        document.getElementById("totalWinAmount").innerText = "₹0";
+        document.getElementById("winDisplay").classList.add("hidden");
+        lastWinDetails = ""; 
+        renderSaved(); renderResultHistory(); updateResultDropdown(); 
+        showToast("എല്ലാം റീസെന്റ് ഹിസ്റ്ററിയിലേക്ക് മാറ്റി ക്ലിയർ ചെയ്തു! 🗑️");
+    }
+}
+
+    
     function shareMergedData() {
         let min = prompt("Min count?", "1"); if (min === null) return; min = parseInt(min) || 0;
         let dict = {}; let finalTotal = 0;
-        
-        let filteredPermanent = permanent.filter(i => isMatchingTab(i.p, activeHistoryTab));
-
-        filteredPermanent.forEach(i => { let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; });
+        permanent.forEach(i => { let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; });
         let filtered = Object.values(dict).filter(i => i.c >= min).sort((a,b)=> b.c - a.c);
-        let txt = ` TOTAL LIST (${activeHistoryTab} DIGIT)\n------------------\n`;
+        let txt = ` TOTAL LIST\n------------------\n`;
         filtered.forEach(i => { let pDisp = (i.p === 'ABC') ? "" : i.p + " - "; txt += ` KL - ${pDisp}${i.n}  =  ${i.c}\n`; finalTotal += i.c; });
         txt += `------------------\n*Total: ${finalTotal}*`;
         window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt);
@@ -1218,12 +1164,9 @@
         if (permanent.length === 0) { showToast("ഹിസ്റ്ററിയിൽ ഡാറ്റ ഇല്ല!"); return; }
         let min = prompt("Min count?", "1"); if (min === null) return; min = parseInt(min) || 0;
         let dict = {}; let finalTotal = 0;
-
-        let filteredPermanent = permanent.filter(i => isMatchingTab(i.p, activeHistoryTab));
-
-        filteredPermanent.forEach(i => { let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; });
+        permanent.forEach(i => { let k=i.p+"-"+i.n; dict[k] = (dict[k] || {p:i.p, n:i.n, c:0}); dict[k].c += i.c; });
         let filtered = Object.values(dict).filter(i => i.c >= min).sort((a,b)=> b.c - a.c);
-        let txt = ` TOTAL LIST (${activeHistoryTab} DIGIT)\n------------------\n`;
+        let txt = ` TOTAL LIST\n------------------\n`;
         filtered.forEach(i => { let pDisp = (i.p === 'ABC') ? "" : i.p + " - "; txt += ` KL - ${pDisp}${i.n}  =  ${i.c}\n`; finalTotal += i.c; });
         txt += `------------------\n*Total: ${finalTotal}*`;
         try { await navigator.clipboard.writeText(txt); showToast("History Copied! 📋"); } 
@@ -1231,122 +1174,112 @@
     }
     
     function processSmartPaste() {
-        let textArea = document.getElementById("smartPaste");
-        let text = textArea.value;
-        let lines = text.split('\n');
-        let foundAny = false;
-        let mergeEnabled = document.getElementById("mainMergeToggle").checked;
+    let textArea = document.getElementById("smartPaste");
+    let text = textArea.value;
+    let lines = text.split('\n');
+    let foundAny = false, mergeEnabled = document.getElementById("mainMergeToggle").checked;
 
-        lines.forEach(line => {
-            let cleanLine = line.trim().toLowerCase();
-            if (!cleanLine) return;
+    lines.forEach(line => {
+        let cleanLine = line.trim().toLowerCase();
+        if (!cleanLine) return;
 
-            // 1. WhatsApp Time/Header ഭാഗം ഒഴിവാക്കുന്നു
-            if (cleanLine.includes(']')) {
-                let parts = cleanLine.split(':');
-                if (parts.length > 2) {
-                    cleanLine = parts.slice(2).join(':').trim();
-                } else {
-                    let bracketParts = cleanLine.split(']');
-                    cleanLine = bracketParts[1] ? bracketParts[1].trim() : cleanLine;
-                }
-            }
-
-            // 2. ഫോൺ നമ്പർ സന്ദേശത്തിന് മുന്നിൽ വന്നിട്ടുണ്ടെങ്കിൽ നീക്കുന്നു
-            cleanLine = cleanLine.replace(/^\+?\d[\d\s-]{8,}\d:?/, '').trim();
-            if (!cleanLine) return;
-
-            // 3. ഒഴിവാക്കേണ്ട പൊതുവായ വാക്കുകൾ
-            if (cleanLine.includes('total') || 
-                cleanLine.includes('gt') || 
-                cleanLine.includes('tot') || 
-                cleanLine.includes('net') || 
-                cleanLine.includes('ടോറ്റൽ')) {
-                return;
-            }
-
-            // 4. A5 10, B2 5, AB12 10 പോലെ ലെറ്ററും നമ്പറും അടുത്ത് വരുന്നത് പ്രോസസ് ചെയ്യാനും വേർതിരിക്കാനും പ്ലേസ്‌ഹോൾഡർ മാറ്റുന്നു
-            cleanLine = cleanLine.replace(/\b(ab|bc|ac|a|b|c)(\d+)\b/g, '$1 $2');
-
-            // 5. കോമ, കുത്ത്, ഈക്വൽ, കോളൻ തുടങ്ങിയ ചിഹ്നങ്ങളെ സ്പേസ് ആക്കി മാറ്റുന്നു
-            let normalizedLine = cleanLine.replace(/[,:=]/g, ' ').replace(/\s+/g, ' ').trim();
-
-            // 6. സ്പേസ് വെച്ച് വാക്ക് പിരിക്കുന്നു
-            let tokens = normalizedLine.split(' ').filter(Boolean);
-            if (!tokens || tokens.length === 0) return;
-
-            for (let i = 0; i < tokens.length; i++) {
-                let current = tokens[i];
-
-                // Single / Double Digits (A, B, C, AB, BC, AC)
-                if (["a", "b", "c", "ab", "bc", "ac"].includes(current)) {
-                    let pos = current.toUpperCase();
-                    let expectedLen = (["A", "B", "C"].includes(pos)) ? 1 : 2;
-                    let nextToken = tokens[i + 1];
-                    
-                    if (nextToken && /^\d+$/.test(nextToken)) {
-                        let num = nextToken.padStart(expectedLen, '0');
-                        let count = 1;
-                        let afterValueToken = tokens[i + 2];
-                        if (afterValueToken && /^\d+$/.test(afterValueToken)) {
-                            count = parseInt(afterValueToken);
-                            i += 2;
-                        } else {
-                            i += 1;
-                        }
-                        addProcessedEntry(pos, num, count, mergeEnabled);
-                        foundAny = true;
-                        continue;
-                    }
-                }
-                
-                // 3 Digits (080 box 5, 000 10, 801 20 തുടങ്ങിയവ)
-                let digitMatch = current.match(/^\d+$/);
-                if (digitMatch && current.length <= 3) {
-                    let num = current.padStart(3, '0');
-                    let count = 1;
-                    let isBox = false;
-
-                    let nextToken = tokens[i + 1];
-
-                    if (nextToken === "box" || nextToken === "bx") {
-                        isBox = true;
-                        i++;
-                        let countToken = tokens[i + 1];
-                        if (countToken && /^\d+$/.test(countToken)) {
-                            count = parseInt(countToken);
-                            i++;
-                        }
-                    } 
-                    else if (nextToken && /^\d+$/.test(nextToken)) {
-                        count = parseInt(nextToken);
-                        i++;
-                    }
-
-                    if (isBox) {
-                        let s = num.split(''), combinations = [];
-                        for(let x=0; x<3; x++) for(let y=0; y<3; y++) for(let z=0; z<3; z++) if(x!==y && y!==z && x!==z) combinations.push(s[x]+s[y]+s[z]);
-                        [...new Set(combinations)].forEach(bxNum => {
-                            addProcessedEntry("ABC", bxNum, count, mergeEnabled);
-                        });
-                    } else {
-                        addProcessedEntry("ABC", num, count, mergeEnabled);
-                    }
-                    foundAny = true;
-                }
-            }
-        });
-
-        if (foundAny) { 
-            textArea.value = ""; 
-            closeModals(); 
-            renderLive(); 
-            save(); 
-            showToast("Smart Data Added!"); 
-        } else {
-            showToast("നമ്പറുകൾ ഒന്നും കണ്ടെത്തിയില്ല!"); 
+        // ആകെ തുക കാണിക്കുന്ന വരികൾ (Total, GT, Tot) ഉണ്ടെങ്കിൽ ആ വരി പൂർണ്ണമായി ഒഴിവാക്കുന്നു
+        if (cleanLine.includes('total') || 
+            cleanLine.includes('gt') || 
+            cleanLine.includes('tot') || 
+            cleanLine.includes('net') || 
+            cleanLine.includes('ਟোটਲ')) {
+            return; // ഈ വരിയിൽ അടുത്ത ലൂപ്പിലേക്ക് കടക്കുന്നു (തൊട്ടടുത്ത വരിയെ ബാധിക്കില്ല)
         }
+        
+        if (cleanLine.includes(']')) {
+            let parts = cleanLine.split(']');
+            cleanLine = parts[1] ? parts[1].trim() : cleanLine;
+        }
+        if (cleanLine.includes(':')) {
+            let parts = cleanLine.split(':');
+            cleanLine = parts[1] ? parts[1].trim() : cleanLine;
+        }
+
+        // 1. സമചിഹ്നം (=) ഉള്ള വരികൾ (ഉദാഹരണം: 123box = 2 അല്ലെങ്കിൽ 123 = 5)
+        if (cleanLine.includes('=')) {
+            let parts = cleanLine.split('=');
+            let numMatch = parts[0].match(/\d{3}/);
+            let countMatch = parts[1].match(/\d+/);
+
+            if (numMatch && countMatch) {
+                let isBox = parts[0].includes('box') || parts[0].includes('bx');
+                let num = numMatch[0];
+                let count = parseInt(countMatch[0]);
+
+                if (isBox) {
+                    let s = num.split(''), combinations = [];
+                    for(let x=0; x<3; x++) for(let y=0; y<3; y++) for(let z=0; z<3; z++) if(x!==y && y!==z && x!==z) combinations.push(s[x]+s[y]+s[z]);
+                    [...new Set(combinations)].forEach(bxNum => {
+                        addProcessedEntry("ABC", bxNum, count, mergeEnabled);
+                    });
+                } else {
+                    addProcessedEntry("ABC", num, count, mergeEnabled);
+                }
+                foundAny = true;
+                return; 
+            }
+        }
+
+        // 2. സ്പേസ്, കോമ, അല്ലെങ്കിൽ ഒട്ടിപ്പിടിച്ചു വരുന്ന വരികൾ പ്രോസസ്സ് ചെയ്യുന്നു
+        let tokens = cleanLine.match(/[a-z]+|\d+/g);
+        if (!tokens) return;
+
+        for (let i = 0; i < tokens.length; i++) {
+            let current = tokens[i];
+            
+            if (/^\d{3}$/.test(current)) {
+                let num = current, count = 1, isBox = false, j = i + 1;
+                
+                while (j < tokens.length) {
+                    let next = tokens[j];
+                    if (next === "box" || next === "bx") { 
+                        isBox = true; 
+                        j++; 
+                    } 
+                    else if (/^\d+$/.test(next)) {
+                        if (next.length === 3) break; 
+                        else { 
+                            count = parseInt(next); 
+                            j++; 
+                            break; 
+                        }
+                    } else {
+                        j++;
+                    }
+                }
+                i = j - 1;
+
+                if (isBox) {
+                    let s = num.split(''), combinations = [];
+                    for(let x=0; x<3; x++) for(let y=0; y<3; y++) for(let z=0; z<3; z++) if(x!==y && y!==z && x!==z) combinations.push(s[x]+s[y]+s[z]);
+                    [...new Set(combinations)].forEach(bxNum => {
+                        addProcessedEntry("ABC", bxNum, count, mergeEnabled);
+                    });
+                } else {
+                    addProcessedEntry("ABC", num, count, mergeEnabled);
+                }
+                foundAny = true;
+            }
+        }
+    });
+
+    if(foundAny) { 
+        textArea.value = ""; 
+        closeModals(); 
+        renderLive(); 
+        save(); 
+        showToast("Smart Data Added!"); 
+    } else {
+        showToast("നമ്പറുകൾ ഒന്നും കണ്ടെത്തിയില്ല!"); 
     }
+}
+
 
     function addProcessedEntry(pos, num, count, mergeEnabled) {
         let merged = false;
