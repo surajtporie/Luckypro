@@ -388,7 +388,7 @@
 <div id="smartModal" class="overlay">
     <div class="modal glass-panel">
         <h3>Smart Paste</h3>
-        <textarea id="smartPaste" placeholder="Paste data here (e.g., 142box 2)..." style="height:150px;"></textarea>
+        <textarea id="smartPaste" placeholder="Paste data here (e.g., 142box 2, 132=2, 123 145 5 615=100)..." style="height:150px;"></textarea>
         <button class="btn-s" style="width:100%; margin-top:10px;" onclick="processSmartPaste()">ADD DATA</button>
         <button class="btn-p" style="width:100%; margin-top:10px; background:#444; color:white;" onclick="closeModals()">CLOSE</button>
     </div>
@@ -744,73 +744,65 @@
     }
 
     function openRecentModal() {
-    let h = "";
-    if (recentSessions.length === 0) h = "<p style='text-align:center; padding:20px;'>No Recent History Found</p>";
-    else {
-        recentSessions.forEach(session => {
-            let total = session.data.reduce((sum, item) => sum + item.c, 0);
-            
-            let isFullBackup = (session.name === "FULL HISTORY BACKUP");
-            let buttonText = isFullBackup ? "⏳ RESTORE FULL HISTORY BACK TO SAVED PAGE" : "RESTORE TO CURRENT PAGE";
-            let buttonStyle = isFullBackup ? "background:#2ecc71; color:black; font-weight:bold; border:1px solid white;" : "";
+        let h = "";
+        if (recentSessions.length === 0) h = "<p style='text-align:center; padding:20px;'>No Recent History Found</p>";
+        else {
+            recentSessions.forEach(session => {
+                let total = session.data.reduce((sum, item) => sum + item.c, 0);
+                let isFullBackup = (session.name === "FULL HISTORY BACKUP");
+                let buttonText = isFullBackup ? "⏳ RESTORE FULL HISTORY BACK TO SAVED PAGE" : "RESTORE TO CURRENT PAGE";
+                let buttonStyle = isFullBackup ? "background:#2ecc71; color:black; font-weight:bold; border:1px solid white;" : "";
 
-            h += `<div class="recent-block" style="border-bottom:1px solid #444; padding:10px 0;">
-                    <div class="recent-time">${session.time} | <span style="color:var(--primary)">${session.type}</span></div>
-                    <div style="font-weight:bold; margin-bottom:5px; color:var(--secondary)">Name: ${session.name}</div>
-                    <div style="max-height:150px; overflow-y:auto; font-size:12px; background:rgba(0,0,0,0.2); padding:8px; border-radius:10px;">
-                        ${session.data.map(i => `${i.p} ${i.n} = ${i.c}`).join("<br>")}
-                    </div>
-                    <div style="text-align:right; font-weight:bold; margin-top:5px; color:var(--primary)">Total: ${total}</div>
-                    
-                    <button class="btn-s" style="width:100%; margin-top:8px; font-size:11px; padding:8px; ${buttonStyle}" onclick="restoreRecent(${session.id})">${buttonText}</button>
-                  </div>`;
-        });
+                h += `<div class="recent-block" style="border-bottom:1px solid #444; padding:10px 0;">
+                        <div class="recent-time">${session.time} | <span style="color:var(--primary)">${session.type}</span></div>
+                        <div style="font-weight:bold; margin-bottom:5px; color:var(--secondary)">Name: ${session.name}</div>
+                        <div style="max-height:150px; overflow-y:auto; font-size:12px; background:rgba(0,0,0,0.2); padding:8px; border-radius:10px;">
+                            ${session.data.map(i => `${i.p} ${i.n} = ${i.c}`).join("<br>")}
+                        </div>
+                        <div style="text-align:right; font-weight:bold; margin-top:5px; color:var(--primary)">Total: ${total}</div>
+                        
+                        <button class="btn-s" style="width:100%; margin-top:8px; font-size:11px; padding:8px; ${buttonStyle}" onclick="restoreRecent(${session.id})">${buttonText}</button>
+                      </div>`;
+            });
+        }
+        document.getElementById("recentContentList").innerHTML = h;
+        document.getElementById("recentModal").classList.add("flex");
     }
-    document.getElementById("recentContentList").innerHTML = h;
-    document.getElementById("recentModal").classList.add("flex");
-}
-
-
-
 
     function restoreRecent(id) {
-    let session = recentSessions.find(s => s.id === id);
-    if(!session) {
-        alert("ഡാറ്റ കണ്ടെത്താൻ കഴിഞ്ഞില്ല!");
-        return;
-    }
-
-    // ഇത് ഫുൾ ഹിസ്റ്ററി ബാക്കപ്പ് ആണോ എന്ന് നോക്കുന്നു
-    if(session.name === "FULL HISTORY BACKUP") {
-        if(confirm("ഈ ഫുൾ ഡാറ്റ തിരികെ Saved History പേജിലേക്ക് മാറ്റട്ടെ?")) {
-            permanent = [...session.data];
-            localStorage.setItem("perm_list", JSON.stringify(permanent));
-            
-            // ഹിസ്റ്ററി ടേബിളും ലിസ്റ്റും റീഫ്രെഷ് ചെയ്യുന്നു
-            if (typeof renderSaved === "function") renderSaved();
-            if (typeof renderResultHistory === "function") renderResultHistory();
-            
-            document.getElementById("recentModal").classList.remove("flex");
-            showToast("മുഴുവൻ ഹിസ്റ്ററിയും വിജയകരമായി തിരികെ എടുത്തു! 🎉");
+        let session = recentSessions.find(s => s.id === id);
+        if(!session) {
+            alert("ഡാറ്റ കണ്ടെത്താൻ കഴിഞ്ഞില്ല!");
+            return;
         }
-    } else {
-        // സാധാരണ സിംഗിൾ കസ്റ്റമർ പേജ് റീസ്റ്റോർ ചെയ്യാനുള്ള പഴയ കോഡ്
-        if(confirm("ഈ ഡാറ്റ നിലവിലെ കസ്റ്റമർ പേജിലേക്ക് മാറ്റട്ടെ?")) {
-            if(typeof activeIndex !== 'undefined' && customers[activeIndex]) {
-                customers[activeIndex].temp = [...session.data];
-                customers[activeIndex].name = session.name;
-                document.getElementById("customer").value = session.name;
-                if (typeof renderTabs === "function") renderTabs();
-                if (typeof save === "function") save();
+
+        if(session.name === "FULL HISTORY BACKUP") {
+            if(confirm("ഈ ഫുൾ ഡാറ്റ തിരികെ Saved History പേജിലേക്ക് മാറ്റട്ടെ?")) {
+                permanent = [...session.data];
+                localStorage.setItem("perm_list", JSON.stringify(permanent));
+                
+                if (typeof renderSaved === "function") renderSaved();
+                if (typeof renderResultHistory === "function") renderResultHistory();
+                
                 document.getElementById("recentModal").classList.remove("flex");
-                showToast("ഡാറ്റ റീസ്റ്റോർ ചെയ്തു!");
-            } else {
-                alert("കറന്റ് കസ്റ്റമർ ടാബ് ആക്ടീവ് അല്ല!");
+                showToast("മുഴുവൻ ഹിസ്റ്ററിയും വിജയകരമായി തിരികെ എടുത്തു! 🎉");
+            }
+        } else {
+            if(confirm("ഈ ഡാറ്റ നിലവിലെ കസ്റ്റമർ പേജിലേക്ക് മാറ്റട്ടെ?")) {
+                if(typeof activeIndex !== 'undefined' && customers[activeIndex]) {
+                    customers[activeIndex].temp = [...session.data];
+                    customers[activeIndex].name = session.name;
+                    document.getElementById("customer").value = session.name;
+                    if (typeof renderTabs === "function") renderTabs();
+                    if (typeof save === "function") save();
+                    document.getElementById("recentModal").classList.remove("flex");
+                    showToast("ഡാറ്റ റീസ്റ്റോർ ചെയ്തു!");
+                } else {
+                    alert("കറന്റ് കസ്റ്റമർ ടാബ് ആക്ടീവ് അല്ല!");
+                }
             }
         }
     }
-}
-
 
     function clearRecentHistory() {
         if(confirm("പഴയ എല്ലാ ഹിസ്റ്ററിയും ക്ലിയർ ചെയ്യട്ടെ?")) {
@@ -1024,7 +1016,7 @@
         document.getElementById("stepStart").value = ""; document.getElementById("stepEnd").value = ""; document.getElementById("stepCount").value = "";
     }
 
-            function checkWinners() {
+    function checkWinners() {
         let winText = document.getElementById("winningPaste").value;
         let found = winText.match(/\d{3}/g);
         if(!found || found.length === 0) {
@@ -1037,56 +1029,52 @@
 
         let totalWinAmount = 0;
         let historyTotalTickets = 0;
-        let winnersMap = {}; // Merge ചെയ്യാനായി ഉപയോഗിക്കുന്നു
-
-        // സമ്മാനങ്ങളുടെ ഓർഡർ നിശ്ചയിക്കുന്നു
-        const prizeOrder = { "1st": 1, "2nd": 2, "3rd": 3, "4th": 4, "5th": 5, "6th+": 6, "A": 7, "B": 8, "C": 9, "AB": 10, "BC": 11, "AC": 12 };
+        let winnersMap = {}; 
 
         permanent.forEach(i => {
             historyTotalTickets += i.c; 
-            let prizePerUnit = 0;
-            let type = "";
 
-            // Winner Logic
+            let matchedPrizes = [];
+
             if(i.p === "ABC") {
-                if(i.n === found[0]) { prizePerUnit = prizes.p1; type = "1st"; }
-                else if(found[1] && i.n === found[1]) { prizePerUnit = prizes.p2; type = "2nd"; }
-                else if(found[2] && i.n === found[2]) { prizePerUnit = prizes.p3; type = "3rd"; }
-                else if(found[3] && i.n === found[3]) { prizePerUnit = prizes.p4; type = "4th"; }
-                else if(found[4] && i.n === found[4]) { prizePerUnit = prizes.p5; type = "5th"; }
-                else {
-                    for(let k = 5; k < found.length; k++) {
-                        if(i.n === found[k]) { prizePerUnit = prizes.p6; type = "6th+"; break; }
+                if(i.n === found[0]) matchedPrizes.push({ prize: prizes.p1, type: "1st" });
+                if(found[1] && i.n === found[1]) matchedPrizes.push({ prize: prizes.p2, type: "2nd" });
+                if(found[2] && i.n === found[2]) matchedPrizes.push({ prize: prizes.p3, type: "3rd" });
+                if(found[3] && i.n === found[3]) matchedPrizes.push({ prize: prizes.p4, type: "4th" });
+                if(found[4] && i.n === found[4]) matchedPrizes.push({ prize: prizes.p5, type: "5th" });
+                
+                for(let k = 5; k < found.length; k++) {
+                    if(i.n === found[k]) {
+                        matchedPrizes.push({ prize: prizes.p6, type: "6th+" });
+                        break; 
                     }
                 }
             } else {
                 let sPrize = prizes.ps || 80;
-                if(i.p === "A" && i.n === wA) { prizePerUnit = sPrize; type = "A"; }
-                else if(i.p === "B" && i.n === wB) { prizePerUnit = sPrize; type = "B"; }
-                else if(i.p === "C" && i.n === wC) { prizePerUnit = sPrize; type = "C"; }
-                else if(i.p === "AB" && i.n === wA+wB) { prizePerUnit = sPrize * 2; type = "AB"; }
-                else if(i.p === "BC" && i.n === wB+wC) { prizePerUnit = sPrize * 2; type = "BC"; }
-                else if(i.p === "AC" && i.n === wA+wC) { prizePerUnit = sPrize * 2; type = "AC"; }
+                if(i.p === "A" && i.n === wA) matchedPrizes.push({ prize: sPrize, type: "A" });
+                if(i.p === "B" && i.n === wB) matchedPrizes.push({ prize: sPrize, type: "B" });
+                if(i.p === "C" && i.n === wC) matchedPrizes.push({ prize: sPrize, type: "C" });
+                if(i.p === "AB" && i.n === wA+wB) matchedPrizes.push({ prize: sPrize * 2, type: "AB" });
+                if(i.p === "BC" && i.n === wB+wC) matchedPrizes.push({ prize: sPrize * 2, type: "BC" });
+                if(i.p === "AC" && i.n === wA+wC) matchedPrizes.push({ prize: sPrize * 2, type: "AC" });
             }
 
-            if(prizePerUnit > 0) {
-                // കീ ആയി നമ്പറും ടൈപ്പും ഉപയോഗിക്കുന്നു (ഉദാ: "123-1st")
-                let key = i.n + "-" + type;
+            matchedPrizes.forEach(mp => {
+                let key = i.n + "-" + mp.type;
                 if(!winnersMap[key]) {
-                    winnersMap[key] = { n: i.n, p: i.p, type: type, count: 0, prize: prizePerUnit, order: prizeOrder[type] || 99 };
+                    winnersMap[key] = { n: i.n, p: i.p, type: mp.type, count: 0, prize: mp.prize };
                 }
                 winnersMap[key].count += i.c;
-            }
+            });
         });
 
-        // സോർട്ടിംഗ് (1st, 2nd.. എന്ന ക്രമത്തിൽ)
-        let sortedWinners = Object.values(winnersMap).sort((a, b) => a.order - b.order);
+        // Sort by Total Prize Amount Descending
+        let sortedWinners = Object.values(winnersMap).sort((a, b) => (b.count * b.prize) - (a.count * a.prize));
 
         let reportLines = [];
         sortedWinners.forEach(w => {
             let lineTotal = w.count * w.prize;
             totalWinAmount += lineTotal;
-            // ABC ഒഴിവാക്കി ബാക്കിയുള്ള പൊസിഷനുകൾ മാത്രം കാണിക്കുന്നു
             let posLabel = (w.p === "ABC") ? "" : `(${w.p})`;
             reportLines.push(`🌟 ${w.n} ${posLabel} [${w.type}] × ${w.count} = ₹${lineTotal}`);
         });
@@ -1111,8 +1099,6 @@
         showToast("റിപ്പോർട്ട് തയ്യാറായി!");
     }
 
-
-
     async function copyWinningList() { 
         try { if (!lastWinDetails) return; await navigator.clipboard.writeText(lastWinDetails); showToast("Copied!"); } 
         catch (err) { let textArea = document.createElement("textarea"); textArea.value = lastWinDetails; document.body.appendChild(textArea); textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); }
@@ -1130,25 +1116,23 @@
     }
 
     function clearAllHistory() {
-    if(confirm("ഹിസ്റ്ററി, വിന്നിംഗ് റിപ്പോർട്ട്, സേവ് ചെയ്ത റിസൾട്ടുകൾ എന്നിവ പൂർണ്ണമായും ക്ലിയർ ചെയ്യട്ടെ?")) {
-        // [CRITICAL UPDATE]: ക്ലിയർ ചെയ്യുന്ന ഫുൾ ഹിസ്റ്ററി ഡാറ്റയെ ഒരുമിച്ച് RECENT-ലേക്ക് മാറ്റുന്നു
-        if(permanent && permanent.length > 0) {
-            addToRecentSessions("FULL HISTORY BACKUP", [...permanent], "CLEARED");
+        if(confirm("ഹിസ്റ്ററി, വിന്നിംഗ് റിപ്പോർട്ട്, സേവ് ചെയ്ത റിസൾട്ടുകൾ എന്നിവ പൂർണ്ണമായും ക്ലിയർ ചെയ്യട്ടെ?")) {
+            if(permanent && permanent.length > 0) {
+                addToRecentSessions("FULL HISTORY BACKUP", [...permanent], "CLEARED");
+            }
+
+            permanent = []; localStorage.setItem("perm_list", "[]");
+            savedResults = {}; localStorage.setItem("saved_results", "{}");
+            document.getElementById("winningPaste").value = "";
+            document.getElementById("winContent").innerText = "";
+            document.getElementById("totalWinAmount").innerText = "₹0";
+            document.getElementById("winDisplay").classList.add("hidden");
+            lastWinDetails = ""; 
+            renderSaved(); renderResultHistory(); updateResultDropdown(); 
+            showToast("എല്ലാം റീസെന്റ് ഹിസ്റ്ററിയിലേക്ക് മാറ്റി ക്ലിയർ ചെയ്തു! 🗑️");
         }
-
-        permanent = []; localStorage.setItem("perm_list", "[]");
-        savedResults = {}; localStorage.setItem("saved_results", "{}");
-        document.getElementById("winningPaste").value = "";
-        document.getElementById("winContent").innerText = "";
-        document.getElementById("totalWinAmount").innerText = "₹0";
-        document.getElementById("winDisplay").classList.add("hidden");
-        lastWinDetails = ""; 
-        renderSaved(); renderResultHistory(); updateResultDropdown(); 
-        showToast("എല്ലാം റീസെന്റ് ഹിസ്റ്ററിയിലേക്ക് മാറ്റി ക്ലിയർ ചെയ്തു! 🗑️");
     }
-}
 
-    
     function shareMergedData() {
         let min = prompt("Min count?", "1"); if (min === null) return; min = parseInt(min) || 0;
         let dict = {}; let finalTotal = 0;
@@ -1174,112 +1158,103 @@
     }
     
     function processSmartPaste() {
-    let textArea = document.getElementById("smartPaste");
-    let text = textArea.value;
-    let lines = text.split('\n');
-    let foundAny = false, mergeEnabled = document.getElementById("mainMergeToggle").checked;
+        let textArea = document.getElementById("smartPaste");
+        let text = textArea.value;
 
-    lines.forEach(line => {
-        let cleanLine = line.trim().toLowerCase();
-        if (!cleanLine) return;
+        // Clean out WhatsApp timestamps, dates, phone numbers (+91, 10-digit mobile numbers)
+        text = text.replace(/(\+?\d{1,4}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g, ''); 
+        text = text.replace(/\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4}/g, ''); 
+        text = text.replace(/\b\d{10,}\b/g, ''); 
 
-        // ആകെ തുക കാണിക്കുന്ന വരികൾ (Total, GT, Tot) ഉണ്ടെങ്കിൽ ആ വരി പൂർണ്ണമായി ഒഴിവാക്കുന്നു
-        if (cleanLine.includes('total') || 
-            cleanLine.includes('gt') || 
-            cleanLine.includes('tot') || 
-            cleanLine.includes('net') || 
-            cleanLine.includes('ਟোটਲ')) {
-            return; // ഈ വരിയിൽ അടുത്ത ലൂപ്പിലേക്ക് കടക്കുന്നു (തൊട്ടടുത്ത വരിയെ ബാധിക്കില്ല)
-        }
-        
-        if (cleanLine.includes(']')) {
-            let parts = cleanLine.split(']');
-            cleanLine = parts[1] ? parts[1].trim() : cleanLine;
-        }
-        if (cleanLine.includes(':')) {
-            let parts = cleanLine.split(':');
-            cleanLine = parts[1] ? parts[1].trim() : cleanLine;
-        }
+        let lines = text.split('\n');
+        let foundAny = false, mergeEnabled = document.getElementById("mainMergeToggle").checked;
 
-        // 1. സമചിഹ്നം (=) ഉള്ള വരികൾ (ഉദാഹരണം: 123box = 2 അല്ലെങ്കിൽ 123 = 5)
-        if (cleanLine.includes('=')) {
-            let parts = cleanLine.split('=');
-            let numMatch = parts[0].match(/\d{3}/);
-            let countMatch = parts[1].match(/\d+/);
+        lines.forEach(line => {
+            let cleanLine = line.trim().toLowerCase();
+            if (!cleanLine) return;
 
-            if (numMatch && countMatch) {
-                let isBox = parts[0].includes('box') || parts[0].includes('bx');
-                let num = numMatch[0];
-                let count = parseInt(countMatch[0]);
-
-                if (isBox) {
-                    let s = num.split(''), combinations = [];
-                    for(let x=0; x<3; x++) for(let y=0; y<3; y++) for(let z=0; z<3; z++) if(x!==y && y!==z && x!==z) combinations.push(s[x]+s[y]+s[z]);
-                    [...new Set(combinations)].forEach(bxNum => {
-                        addProcessedEntry("ABC", bxNum, count, mergeEnabled);
-                    });
-                } else {
-                    addProcessedEntry("ABC", num, count, mergeEnabled);
-                }
-                foundAny = true;
+            if (cleanLine.includes('total') || 
+                cleanLine.includes('gt') || 
+                cleanLine.includes('tot') || 
+                cleanLine.includes('net')) {
                 return; 
             }
-        }
-
-        // 2. സ്പേസ്, കോമ, അല്ലെങ്കിൽ ഒട്ടിപ്പിടിച്ചു വരുന്ന വരികൾ പ്രോസസ്സ് ചെയ്യുന്നു
-        let tokens = cleanLine.match(/[a-z]+|\d+/g);
-        if (!tokens) return;
-
-        for (let i = 0; i < tokens.length; i++) {
-            let current = tokens[i];
             
-            if (/^\d{3}$/.test(current)) {
-                let num = current, count = 1, isBox = false, j = i + 1;
-                
-                while (j < tokens.length) {
-                    let next = tokens[j];
-                    if (next === "box" || next === "bx") { 
-                        isBox = true; 
-                        j++; 
-                    } 
-                    else if (/^\d+$/.test(next)) {
-                        if (next.length === 3) break; 
-                        else { 
-                            count = parseInt(next); 
-                            j++; 
-                            break; 
-                        }
-                    } else {
-                        j++;
-                    }
-                }
-                i = j - 1;
-
-                if (isBox) {
-                    let s = num.split(''), combinations = [];
-                    for(let x=0; x<3; x++) for(let y=0; y<3; y++) for(let z=0; z<3; z++) if(x!==y && y!==z && x!==z) combinations.push(s[x]+s[y]+s[z]);
-                    [...new Set(combinations)].forEach(bxNum => {
-                        addProcessedEntry("ABC", bxNum, count, mergeEnabled);
-                    });
-                } else {
-                    addProcessedEntry("ABC", num, count, mergeEnabled);
-                }
-                foundAny = true;
+            if (cleanLine.includes(']')) {
+                let parts = cleanLine.split(']');
+                cleanLine = parts[1] ? parts[1].trim() : cleanLine;
             }
+
+            cleanLine = cleanLine.replace(/(\d{3})\s*:\s*(\d+)/g, "$1=$2");
+
+            // Tokenize space/word separated inputs
+            let tokens = cleanLine.match(/[a-z]+|=|\d+/g);
+            if (!tokens) return;
+
+            for (let i = 0; i < tokens.length; i++) {
+                let current = tokens[i];
+                
+                if (/^\d{3}$/.test(current)) {
+                    let num = current;
+                    let count = 1;
+                    let isBox = false;
+                    let j = i + 1;
+
+                    if (j < tokens.length) {
+                        let next = tokens[j];
+
+                        // Case 1: Equal sign (=) following the number
+                        if (next === "=") {
+                            if (j + 1 < tokens.length && /^\d+$/.test(tokens[j + 1])) {
+                                count = parseInt(tokens[j + 1]);
+                                i = j + 1;
+                            }
+                        }
+                        // Case 2: Box / Bx tag
+                        else if (next === "box" || next === "bx") {
+                            isBox = true;
+                            j++;
+                            if (j < tokens.length && tokens[j] === "=") j++;
+                            
+                            if (j < tokens.length && /^\d+$/.test(tokens[j]) && tokens[j].length !== 3) {
+                                count = parseInt(tokens[j]);
+                                i = j;
+                            } else {
+                                i = j - 1;
+                            }
+                        } 
+                        // Case 3: Direct number following (without '=' or alphabets)
+                        else if (/^\d+$/.test(next) && next.length !== 3) {
+                            count = parseInt(next);
+                            i = j;
+                        }
+                        // Case 4: Alphabets (like 'ab', 'a', etc.) -> Ignored as count, count remains 1
+                    }
+
+                    if (isBox) {
+                        let s = num.split(''), combinations = [];
+                        for(let x=0; x<3; x++) for(let y=0; y<3; y++) for(let z=0; z<3; z++) if(x!==y && y!==z && x!==z) combinations.push(s[x]+s[y]+s[z]);
+                        [...new Set(combinations)].forEach(bxNum => {
+                            addProcessedEntry("ABC", bxNum, count, mergeEnabled);
+                        });
+                    } else {
+                        addProcessedEntry("ABC", num, count, mergeEnabled);
+                    }
+                    foundAny = true;
+                }
+            }
+        });
+
+        if(foundAny) { 
+            textArea.value = ""; 
+            closeModals(); 
+            renderLive(); 
+            save(); 
+            showToast("Smart Data Added!"); 
+        } else {
+            showToast("നമ്പറുകൾ ഒന്നും കണ്ടെത്തിയില്ല!"); 
         }
-    });
-
-    if(foundAny) { 
-        textArea.value = ""; 
-        closeModals(); 
-        renderLive(); 
-        save(); 
-        showToast("Smart Data Added!"); 
-    } else {
-        showToast("നമ്പറുകൾ ഒന്നും കണ്ടെത്തിയില്ല!"); 
     }
-}
-
 
     function addProcessedEntry(pos, num, count, mergeEnabled) {
         let merged = false;
@@ -1307,7 +1282,7 @@
         } catch (e) { alert("Scan failed."); }
         input.value = ""; 
     }
+    
 </script>
 </body>
 </html>
-i
